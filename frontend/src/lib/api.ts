@@ -1,6 +1,6 @@
 import type { WalletData, ChatMessage, SendTxIntent } from '../types/index.js'
 
-const BASE = '/api'
+const BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001') + '/api'
 
 export async function fetchWallet(address: string): Promise<WalletData> {
   const res = await fetch(`${BASE}/wallet/${address}`)

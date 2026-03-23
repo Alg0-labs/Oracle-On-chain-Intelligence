@@ -4,15 +4,44 @@ import cors from 'cors'
 import { router } from './routes/index.js'
 
 const app = express()
-const PORT = process.env.PORT ?? 3001
+const PORT = Number(process.env.PORT) || 3001
 
-app.use(cors({ origin: process.env.FRONTEND_URL ?? 'http://localhost:5173' }))
+const allowedOrigins = [
+  process.env.FRONTEND_URL,
+  'http://localhost:5173',
+  'http://localhost:4173',
+].filter(Boolean) as string[]
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Railway health checks, Postman etc.)
+      if (!origin) return callback(null, true)
+      if (
+        allowedOrigins.includes(origin) ||
+        /\.vercel\.app$/.test(origin)
+      ) {
+        callback(null, true)
+      } else {
+        callback(new Error(`CORS blocked: ${origin}`))
+      }
+    },
+    credentials: true,
+  })
+)
+
 app.use(express.json())
 app.use('/api', router)
 
-app.listen(PORT, () => {
-  console.log(`\n🔮 ØRACLE backend running on http://localhost:${PORT}`)
+// Railway / Vercel health check
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', service: 'ØRACLE backend' })
+})
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`\n🔮 ØRACLE backend running on port ${PORT}`)
   console.log(`   Anthropic: ${process.env.ANTHROPIC_API_KEY ? '✓' : '✗ missing'}`)
   console.log(`   Moralis:   ${process.env.MORALIS_API_KEY ? '✓' : '✗ missing'}`)
+  console.log(`   Allowed origins: ${allowedOrigins.join(', ')}`)
   console.log()
 })

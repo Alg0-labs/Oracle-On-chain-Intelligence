@@ -1,0 +1,23 @@
+[phases.build]
+cmds = ["npm install", "npm run build"]
+
+[start]
+cmd = "node dist/index.js"
+```
+
+---
+
+### 6. `frontend/.env.production` ← new file
+Vercel uses this automatically for production builds:
+```
+VITE_REOWN_PROJECT_ID=your_reown_project_id_here
+VITE_API_BASE_URL=https://your-app.up.railway.app
+```
+Replace both values with your real ones. Keep `.env` for local dev as-is.
+
+---
+
+### 7. `frontend/.env` (local dev, already exists — verify it has this)
+```
+VITE_REOWN_PROJECT_ID=your_reown_project_id_here
+VITE_API_BASE_URL=http://localhost:3001

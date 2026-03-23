@@ -15,7 +15,7 @@ const metadata = {
   icons: ['https://avatars.githubusercontent.com/u/37784886'],
 }
 
-const networks = [mainnet, arbitrum, polygon] as [typeof mainnet, ...typeof mainnet[]]
+const networks = [mainnet, arbitrum, polygon] as unknown as [typeof mainnet, ...typeof mainnet[]]
 
 export const wagmiAdapter = new WagmiAdapter({
   projectId,
