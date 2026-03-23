@@ -123,18 +123,33 @@
 
 .mobileLink:hover { color: var(--accent); }
 
+.mobileCta {
+  margin-top: 12px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, var(--accent), #9B8BFF);
+  border: none;
+  color: #fff;
+  font-family: var(--font-display);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  border-radius: 4px;
+  box-shadow: 0 0 24px rgba(124,109,250,0.35);
+  text-decoration: none;
+  text-align: center;
+  display: block;
+}
+
 .ctaWrap {
-  display: flex;
+  display: none;
   align-items: center;
   gap: 14px;
 }
 
-.ctaWrap .primaryBtn {
-  padding: 8px 14px;
-  font-size: 11px;
-}
-
 @media (min-width: 769px) {
+  .ctaWrap {
+    display: flex;
+  }
   .ctaWrap .primaryBtn {
     padding: 10px 24px;
     font-size: 13px;

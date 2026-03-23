@@ -62,7 +62,7 @@ export function Navbar() {
           ))}
           <a
             href="https://app.oracleprotocol.online"
-            style={primaryBtn}
+            className={styles.mobileCta}
             onClick={closeMenu}
           >
             Launch App →
