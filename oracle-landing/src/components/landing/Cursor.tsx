@@ -4,8 +4,14 @@ export function Cursor() {
   const cursorRef = useRef<HTMLDivElement>(null)
   const ringRef   = useRef<HTMLDivElement>(null)
   const [hovered, setHovered] = useState(false)
+  const [isTouch, setIsTouch] = useState(false)
 
   useEffect(() => {
+    setIsTouch('ontouchstart' in window || navigator.maxTouchPoints > 0)
+  }, [])
+
+  useEffect(() => {
+    if (isTouch) return
     let mx = 0, my = 0
     let rx = 0, ry = 0
     let raf: number
@@ -43,7 +49,9 @@ export function Cursor() {
       document.removeEventListener('mousemove', onMove)
       cancelAnimationFrame(raf)
     }
-  }, [])
+  }, [isTouch])
+
+  if (isTouch) return null
 
   return (
     <>

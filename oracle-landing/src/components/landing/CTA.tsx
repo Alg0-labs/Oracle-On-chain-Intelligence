@@ -5,7 +5,7 @@ export function CTA() {
   const ref = useScrollReveal()
 
   return (
-    <section style={{ padding: '140px 60px', textAlign: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }}>
+    <section className="landing-cta-padding" style={{ textAlign: 'center', position: 'relative', zIndex: 1, overflow: 'hidden' }}>
       {/* Background glow */}
       <div style={{
         position: 'absolute', top: '50%', left: '50%',
@@ -19,7 +19,7 @@ export function CTA() {
         <div className="section-tag">// GET STARTED</div>
         <h2 style={{
           fontFamily: 'var(--font-display)',
-          fontSize: 'clamp(38px, 5vw, 68px)',
+          fontSize: 'clamp(28px, 5vw, 68px)',
           fontWeight: 800, lineHeight: 1.05,
           letterSpacing: -2,
           maxWidth: 700, margin: '0 auto 24px',

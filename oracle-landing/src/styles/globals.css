@@ -36,6 +36,10 @@ body {
   cursor: none;
 }
 
+@media (pointer: coarse) {
+  body { cursor: auto; }
+}
+
 /* Scrollbar */
 ::-webkit-scrollbar       { width: 4px; }
 ::-webkit-scrollbar-track { background: transparent; }
@@ -96,6 +100,10 @@ body::before {
   font-family: var(--font-mono);
 }
 
+@media (max-width: 480px) {
+  .section-tag { font-size: 10px; letter-spacing: 2px; margin-bottom: 12px; }
+}
+
 .reveal-section {
   opacity: 0;
   transform: translateY(32px);
@@ -108,3 +116,79 @@ body::before {
 
 a { text-decoration: none; }
 button { cursor: none; }
+
+@media (pointer: coarse) {
+  button { cursor: pointer; }
+}
+
+/* Landing page responsive section padding */
+.landing-section { padding: 120px 60px; }
+.landing-section-narrow { padding: 120px 60px; max-width: 1200px; margin: 0 auto; }
+.landing-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 100px; align-items: center; }
+.landing-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); }
+.landing-cta-padding { padding: 140px 60px; }
+
+@media (max-width: 768px) {
+  .landing-section { padding: 80px 24px; }
+  .landing-section-narrow { padding: 80px 24px; }
+  .landing-grid-2 { grid-template-columns: 1fr; gap: 48px; }
+  .landing-grid-3 { grid-template-columns: 1fr; }
+  .landing-cta-padding { padding: 80px 24px; }
+}
+
+@media (max-width: 480px) {
+  .landing-section { padding: 60px 16px; }
+  .landing-section-narrow { padding: 60px 16px; }
+  .landing-grid-2 { gap: 32px; }
+  .landing-cta-padding { padding: 60px 16px; }
+}
+
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .features-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .features-grid { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 768px) {
+  .feature-card { padding: 32px 24px !important; }
+}
+
+@media (max-width: 480px) {
+  .feature-card { padding: 24px 20px !important; }
+}
+
+@media (max-width: 480px) {
+  .tx-modal { padding: 20px !important; }
+}
+
+@media (max-width: 480px) {
+  .risk-tiers > div { min-width: 100% !important; }
+}
+
+@media (max-width: 768px) {
+  .landing-footer { padding: 48px 24px 32px !important; }
+  .landing-footer > div:first-child { grid-template-columns: 1fr; gap: 40; margin-bottom: 40; }
+  .landing-footer .footer-bottom { padding-top: 24px; flex-direction: column; align-items: flex-start; gap: 16; }
+}
+
+@media (max-width: 480px) {
+  .landing-footer { padding: 40px 16px 24px !important; }
+  .landing-footer .footer-bottom { font-size: 11px; }
+}
+
+@media (max-width: 480px) {
+  .marquee-wrap { padding: 12px 0; }
+  .marquee-item { padding: 0 24px !important; font-size: 10px !important; }
+}

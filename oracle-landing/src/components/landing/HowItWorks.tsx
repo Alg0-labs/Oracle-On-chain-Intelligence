@@ -25,14 +25,13 @@ export function HowItWorks() {
   const rightRef = useScrollReveal()
 
   return (
-    <section id="how-it-works" style={{
-      padding: '120px 60px',
+    <section id="how-it-works" className="landing-section" style={{
       background: 'var(--bg2)',
       borderTop: '1px solid var(--border)',
       borderBottom: '1px solid var(--border)',
       position: 'relative', zIndex: 1,
     }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 100, alignItems: 'center' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }} className="landing-grid-2">
         {/* Left: Steps */}
         <div ref={leftRef} className="reveal-section">
           <div className="section-tag">// HOW IT WORKS</div>

@@ -38,21 +38,13 @@ export function Features() {
   const ref = useScrollReveal()
 
   return (
-    <section id="features" style={{ padding: '120px 60px', maxWidth: 1200, margin: '0 auto', position: 'relative', zIndex: 1 }}>
+    <section id="features" className="landing-section-narrow" style={{ position: 'relative', zIndex: 1 }}>
       <div ref={ref} className="reveal-section">
         <div className="section-tag">// CAPABILITIES</div>
         <h2 style={h2Style}>Everything your wallet<br />has been missing.</h2>
         <p style={subStyle}>Six core intelligence modules that turn raw blockchain data into decisions you can act on.</p>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gap: 2,
-          background: 'var(--border)',
-          border: '1px solid var(--border)',
-          borderRadius: 12,
-          overflow: 'hidden',
-        }}>
+        <div className="features-grid">
           {FEATURES.map((f, i) => (
             <FeatureCard key={i} {...f} />
           ))}
@@ -65,6 +57,7 @@ export function Features() {
 function FeatureCard({ icon, color, title, desc }: { icon: React.ReactNode; color: string; title: string; desc: string }) {
   return (
     <div
+      className="feature-card"
       style={{
         background: 'var(--bg2)',
         padding: '44px 36px',

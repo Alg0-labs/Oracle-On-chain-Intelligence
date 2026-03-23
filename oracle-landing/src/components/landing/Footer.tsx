@@ -23,7 +23,7 @@ const SOCIALS = [
 
 export function Footer() {
   return (
-    <footer style={{
+    <footer className="landing-footer" style={{
       background: 'var(--bg2)',
       borderTop: '1px solid var(--border)',
       padding: '60px 60px 40px',
@@ -78,7 +78,7 @@ export function Footer() {
       </div>
 
       {/* Bottom bar */}
-      <div style={{
+      <div className="footer-bottom" style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         paddingTop: 32,
         borderTop: '1px solid var(--border)',

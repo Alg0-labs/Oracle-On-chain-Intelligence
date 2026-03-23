@@ -9,7 +9,7 @@ export function Marquee() {
   const doubled = [...ITEMS, ...ITEMS]
 
   return (
-    <div style={{
+    <div className="marquee-wrap" style={{
       overflow: 'hidden',
       borderTop: '1px solid var(--border)',
       borderBottom: '1px solid var(--border)',
@@ -23,7 +23,7 @@ export function Marquee() {
         animation: 'marquee 32s linear infinite',
       }}>
         {doubled.map((item, i) => (
-          <div key={i} style={{
+          <div key={i} className="marquee-item" style={{
             display: 'flex', alignItems: 'center', gap: 10,
             padding: '0 40px', whiteSpace: 'nowrap',
             fontSize: 11, color: 'var(--muted)', letterSpacing: 2,

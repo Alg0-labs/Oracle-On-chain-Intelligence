@@ -1,0 +1,142 @@
+.nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px;
+  height: 64px;
+  background: rgba(6,8,16,0.85);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  transition: all 0.3s;
+}
+
+.nav.scrolled {
+  background: rgba(6,8,16,0.98);
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+
+@media (min-width: 769px) {
+  .nav { padding: 0 60px; height: 72px; }
+}
+
+.logo {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  text-decoration: none;
+}
+
+.desktopLinks {
+  display: none;
+}
+
+@media (min-width: 769px) {
+  .desktopLinks {
+    display: flex;
+    align-items: center;
+    gap: 36px;
+    list-style: none;
+  }
+}
+
+.link {
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: color 0.2s;
+}
+
+.link:hover { color: var(--text); }
+
+.hamburger {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 32px;
+  height: 32px;
+  padding: 4px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+@media (min-width: 769px) {
+  .hamburger { display: none; }
+}
+
+.hamburgerLine {
+  width: 100%;
+  height: 2px;
+  background: var(--text);
+  border-radius: 1px;
+  transition: transform 0.3s, opacity 0.3s;
+}
+
+.hamburger.open .hamburgerLine:nth-child(1) {
+  transform: translateY(7px) rotate(45deg);
+}
+
+.hamburger.open .hamburgerLine:nth-child(2) {
+  opacity: 0;
+}
+
+.hamburger.open .hamburgerLine:nth-child(3) {
+  transform: translateY(-7px) rotate(-45deg);
+}
+
+.mobileMenu {
+  position: fixed;
+  top: 64px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99;
+  background: rgba(6,8,16,0.98);
+  backdrop-filter: blur(20px);
+  padding: 32px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  border-top: 1px solid var(--border);
+}
+
+@media (min-width: 769px) {
+  .mobileMenu { display: none; }
+}
+
+.mobileLink {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.mobileLink:hover { color: var(--accent); }
+
+.ctaWrap {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ctaWrap .primaryBtn {
+  padding: 8px 14px;
+  font-size: 11px;
+}
+
+@media (min-width: 769px) {
+  .ctaWrap .primaryBtn {
+    padding: 10px 24px;
+    font-size: 13px;
+  }
+}

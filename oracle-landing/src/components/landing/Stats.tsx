@@ -59,13 +59,12 @@ export function RiskSection() {
   ]
 
   return (
-    <section style={{
-      padding: '120px 60px',
+    <section className="landing-section" style={{
       background: 'var(--bg2)',
       borderBottom: '1px solid var(--border)',
       position: 'relative', zIndex: 1,
     }}>
-      <div style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 100, alignItems: 'center' }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }} className="landing-grid-2">
 
         {/* Left: Risk card */}
         <div ref={leftRef} className="reveal-section">
@@ -116,7 +115,7 @@ export function RiskSection() {
             ØRACLE continuously analyzes your concentration, stablecoin buffer, and
             volatility exposure. Get a plain-English risk score — not just raw numbers.
           </p>
-          <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+          <div className="risk-tiers" style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
             {tiers.map(t => (
               <div key={t.label} style={{
                 padding: '18px 22px',

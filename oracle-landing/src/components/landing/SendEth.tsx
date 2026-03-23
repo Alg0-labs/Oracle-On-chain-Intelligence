@@ -13,13 +13,8 @@ export function SendEth() {
   ]
 
   return (
-    <section id="send-eth" style={{ position: 'relative', zIndex: 1 }}>
-      <div style={{
-        maxWidth: 1200, margin: '0 auto',
-        display: 'grid', gridTemplateColumns: '1fr 1fr',
-        gap: 100, alignItems: 'center',
-        padding: '120px 60px',
-      }}>
+    <section id="send-eth" className="landing-section" style={{ position: 'relative', zIndex: 1 }}>
+      <div style={{ maxWidth: 1200, margin: '0 auto' }} className="landing-grid-2">
         {/* Left */}
         <div ref={leftRef} className="reveal-section">
           <div className="section-tag">// SEND ETH</div>
@@ -59,7 +54,7 @@ function TxModal() {
   ]
 
   return (
-    <div style={{
+    <div className="tx-modal" style={{
       background: 'var(--bg2)',
       border: '1px solid var(--border)',
       borderRadius: 16, padding: 32,
