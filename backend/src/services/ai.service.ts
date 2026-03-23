@@ -1,5 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk'
 import type { WalletData, ChatMessage, ChatResponse, SendTxIntent } from '../types/index.js'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })

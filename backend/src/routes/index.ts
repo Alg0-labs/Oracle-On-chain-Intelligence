@@ -2,6 +2,8 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { fetchWalletData } from '../services/wallet.service.js'
 import { chat } from '../services/ai.service.js'
+import dotenv from 'dotenv'
+dotenv.config()
 
 export const router = Router()
 

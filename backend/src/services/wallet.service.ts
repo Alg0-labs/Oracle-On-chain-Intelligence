@@ -1,4 +1,7 @@
 import type { WalletData, TokenBalance, Transaction, NFT } from '../types/index.js'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const MORALIS_API_KEY = process.env.MORALIS_API_KEY ?? ''
 const ETHERSCAN_API_KEY = process.env.ETHERSCAN_API_KEY ?? ''
