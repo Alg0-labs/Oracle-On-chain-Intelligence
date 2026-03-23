@@ -1,0 +1,19 @@
+[
+  {
+    "hash": "0x6b206c9b9758876d0ee525b018a3d5cde1002e5eead4471b15a1e495cafe85c3",
+    "blockTime": "2025-08-20T09:27:35+00:00",
+    "txFrom": "0x9f969c4174ce1af691805d053d6afad39bc0cb76",
+    "txTo": "0x163f8c2467924be0ae7b5347228cabf260318753",
+    "feeWei": "5177875730544",
+    "feeNativeEth": 0.000005177875730544,
+    "feeUsd": 0.021097,
+    "transfers": [
+      {
+        "tokenAddress": "0x163f8C2467924be0ae7B5347228CABF260318753",
+        "from": "0x9F969c4174ce1AF691805D053D6aFAd39Bc0Cb76",
+        "to": "0x19A5acD414Be00D892D8e8067D9CFDE59d99Cf61",
+        "amountRaw": "599473641770140424"
+      }
+    ]
+  }
+]
