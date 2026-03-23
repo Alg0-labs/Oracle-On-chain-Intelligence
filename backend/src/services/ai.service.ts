@@ -2,10 +2,33 @@ import Anthropic from '@anthropic-ai/sdk'
 import type { WalletData, ChatMessage, ChatResponse, SendTxIntent } from '../types/index.js'
 import dotenv from 'dotenv'
 
-dotenv.config()
+dotenv.config({ override: true })
 
 
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+const SEND_ETH_TOOL = {
+  name: 'send_eth',
+  description: 'Execute an ETH transfer to another address',
+  input_schema: {
+    type: 'object',
+    properties: {
+      to: {
+        type: 'string',
+        description: 'Ethereum address (0x...)',
+      },
+      amount: {
+        type: 'string',
+        description: "Amount in ETH (e.g., '0.1')",
+      },
+      reason: {
+        type: 'string',
+        description: 'Brief explanation of transfer',
+      },
+    },
+    required: ['to', 'amount'],
+  },
+} as const
 
 // ─── Build system prompt from live wallet data ────────────────────────────
 
@@ -51,26 +74,45 @@ ${nftSummary}
 RESPONSE RULES:
 1. Be concise, direct, and insightful. No fluff. No emojis.
 2. Use real numbers from the wallet data above.
-3. If a user wants to SEND ETH (e.g. "send 0.1 ETH to 0x...", "transfer ETH to..."), you MUST:
-   - Confirm the intent clearly
-   - End your reply with this exact JSON block on a new line:
-   TX_INTENT:{"type":"SEND_ETH","to":"<address>","amount":"<amount in ETH>","reason":"<brief reason>"}
-4. Never fabricate data. Only reference what's in the wallet context.
-5. For "what can you do" — list wallet analysis, risk checks, tx history, and sending ETH.`
+3. Only call the send_eth tool when the user gives a clear, direct command to send/transfer now with actionable details.
+4. If the transfer request is uncertain, hypothetical, or not a direct command (e.g. "might", "maybe", "thinking about"), do NOT call send_eth. Instead, reply in a supportive way like: "Whenever you are ready to transfer funds, you can come back here and Oracle will help you do it safely."
+5. Never fabricate data. Only reference what's in the wallet context.
+6. For "what can you do" — list wallet analysis, risk checks, tx history, and sending ETH.`
 }
 
-// ─── Parse transaction intent from AI reply ──────────────────────────────
+// ─── Validate transaction intent from tool use ────────────────────────────
 
-function parseTxIntent(reply: string): { clean: string; txIntent?: SendTxIntent } {
-  const match = reply.match(/TX_INTENT:(\{[^\n]+\})/)
-  if (!match) return { clean: reply }
+function isValidEthAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address.trim())
+}
 
-  try {
-    const txIntent = JSON.parse(match[1]) as SendTxIntent
-    const clean = reply.replace(/\nTX_INTENT:\{[^\n]+\}/, '').trim()
-    return { clean, txIntent }
-  } catch {
-    return { clean: reply }
+function isValidEthAmount(amount: string): boolean {
+  const trimmed = amount.trim()
+  if (!/^\d+(\.\d+)?$/.test(trimmed)) return false
+  const numeric = Number(trimmed)
+  return Number.isFinite(numeric) && numeric > 0
+}
+
+function parseToolTxIntent(content: unknown[]): SendTxIntent | undefined {
+  const toolUse = content.find(
+    (block: any) => block?.type === 'tool_use' && block?.name === 'send_eth'
+  ) as any
+  if (!toolUse?.input || typeof toolUse.input !== 'object') return undefined
+
+  const input = toolUse.input as Record<string, unknown>
+  const to = typeof input.to === 'string' ? input.to.trim() : ''
+  const amount = typeof input.amount === 'string' ? input.amount.trim() : ''
+  const reasonRaw = typeof input.reason === 'string' ? input.reason.trim() : ''
+
+  if (!isValidEthAddress(to) || !isValidEthAmount(amount)) {
+    return undefined
+  }
+
+  return {
+    type: 'SEND_ETH',
+    to,
+    amount,
+    reason: reasonRaw || 'User requested ETH transfer',
   }
 }
 
@@ -87,17 +129,23 @@ export async function chat(
     max_tokens: 1024,
     system: systemPrompt,
     messages: messages.map(m => ({ role: m.role, content: m.content })),
+    tools: [SEND_ETH_TOOL],
   })
 
-  const rawReply = response.content
-    .filter(b => b.type === 'text')
-    .map(b => (b as any).text)
+  const content = response.content as Array<{ type: string; text?: string; [key: string]: unknown }>
+  const reply = content
+    .filter((b) => b.type === 'text')
+    .map((b) => b.text ?? '')
     .join('')
+    .trim()
 
-  const { clean, txIntent } = parseTxIntent(rawReply)
+  const txIntent = parseToolTxIntent(content as unknown[])
+  const fallbackReply = txIntent
+    ? `I can prepare this transfer: send ${txIntent.amount} ETH to ${txIntent.to}. Please confirm before execution.`
+    : ''
 
   return {
-    reply: clean,
+    reply: reply || fallbackReply,
     txIntent,
   }
 }
