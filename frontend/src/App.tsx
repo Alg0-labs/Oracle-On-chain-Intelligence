@@ -2,8 +2,8 @@ import { useState, useEffect } from 'react'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { ChatPanel } from './components/ChatPanel.js'
 import { PortfolioPanel } from './components/PortfolioPanel.js'
-import { fetchWallet } from './lib/api.js'
-import type { WalletData } from './types/index.js'
+import { fetchWallet, fetchMarket } from './lib/api.js'
+import type { WalletData, MarketData } from './types/index.js'
 
 type Tab = 'chat' | 'portfolio'
 
@@ -12,6 +12,7 @@ export default function App() {
   const { open } = useAppKit()
 
   const [wallet, setWallet] = useState<WalletData | null>(null)
+  const [market, setMarket] = useState<MarketData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('chat')
@@ -20,12 +21,16 @@ export default function App() {
   useEffect(() => {
     if (!address || !isConnected) {
       setWallet(null)
+      setMarket(null)
       return
     }
     setLoading(true)
     setError(null)
-    fetchWallet(address)
-      .then(setWallet)
+    Promise.all([fetchWallet(address), fetchMarket(address)])
+      .then(([walletData, marketData]) => {
+        setWallet(walletData)
+        setMarket(marketData)
+      })
       .catch(err => setError(err.message ?? 'Failed to load wallet'))
       .finally(() => setLoading(false))
   }, [address, isConnected])
@@ -140,7 +145,7 @@ export default function App() {
       <div style={content}>
         {tab === 'chat'
           ? <ChatPanel wallet={wallet} address={wallet.address} />
-          : <PortfolioPanel wallet={wallet} />
+          : <PortfolioPanel wallet={wallet} market={market} />
         }
       </div>
     </div>
