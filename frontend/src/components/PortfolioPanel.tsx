@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { CSSProperties } from 'react'
-import type { WalletData, Transaction, DecodedTransfer, MarketData } from '../types/index.js'
+import type { WalletData, Transaction, DecodedTransfer, MarketData, MarketNewsInsight } from '../types/index.js'
 import { fetchTransactions } from '../lib/api.js'
 
 function Sparkline({ positive }: { positive: boolean }) {
