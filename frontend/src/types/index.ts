@@ -9,6 +9,21 @@ export interface TokenBalance {
   change24h?: number
 }
 
+export type TransactionActivity = 'swap' | 'send' | 'receive' | 'contract'
+
+export interface DecodedTransfer {
+  tokenAddress: string
+  symbol: string
+  name: string
+  decimals: number
+  logo?: string
+  from: string
+  to: string
+  amountRaw: string
+  amountFormatted: string
+  direction: 'in' | 'out'
+}
+
 export interface Transaction {
   hash: string
   from: string
@@ -18,6 +33,13 @@ export interface Transaction {
   timestamp: number
   description: string
   status: 'success' | 'failed'
+  activityType: TransactionActivity
+  transfers: DecodedTransfer[]
+  feeNativeEth?: number
+  feeUsd?: number
+  method?: string
+  gasUsed?: string
+  gasPrice?: string
 }
 
 export interface NFT {

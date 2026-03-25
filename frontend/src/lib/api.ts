@@ -1,4 +1,4 @@
-import type { WalletData, ChatMessage, SendTxIntent } from '../types/index.js'
+import type { WalletData, Transaction, ChatMessage, SendTxIntent } from '../types/index.js'
 
 const BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001') + '/api'
 
@@ -7,6 +7,19 @@ export async function fetchWallet(address: string): Promise<WalletData> {
   const json = await res.json()
   if (!json.success) throw new Error(json.error ?? 'Failed to fetch wallet')
   return json.wallet
+}
+
+export async function fetchTransactions(
+  address: string,
+  offset?: string,
+  limit = 10
+): Promise<{ transactions: Transaction[]; nextCursor: string | null; hasMore: boolean }> {
+  const params = new URLSearchParams({ limit: String(limit) })
+  if (offset) params.set('offset', offset)
+  const res = await fetch(`${BASE}/wallet/${address}/transactions?${params}`)
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error ?? 'Failed to fetch transactions')
+  return { transactions: json.transactions, nextCursor: json.nextCursor, hasMore: json.hasMore }
 }
 
 export async function sendChat(
