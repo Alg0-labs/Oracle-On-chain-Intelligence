@@ -3,6 +3,64 @@ import { sendChat } from '../lib/api.js'
 import { SendConfirmModal } from './SendConfirmModal.js'
 import type { ChatMessage, WalletData, SendTxIntent } from '../types/index.js'
 
+function cleanAssistantText(text: string): string {
+  return text
+    .replace(/\*\*/g, '')
+    .replace(/__+/g, '')
+}
+
+function renderInlineLinks(text: string) {
+  const normalized = cleanAssistantText(text)
+  const parts = normalized.split(/(https?:\/\/[^\s]+)/g)
+  return parts.map((part, idx) => {
+    if (/^https?:\/\/[^\s]+$/.test(part)) {
+      return (
+        <a key={`${part}-${idx}`} href={part} target="_blank" rel="noreferrer" style={msgLink}>
+          {part}
+        </a>
+      )
+    }
+    return <span key={`txt-${idx}`}>{part}</span>
+  })
+}
+
+function renderStructuredAssistantMessage(text: string) {
+  const normalized = cleanAssistantText(text)
+  const lines = normalized
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0)
+
+  return lines.map((line, idx) => {
+    const isHeader = line.endsWith(':') && !line.startsWith('•') && !line.startsWith('-')
+    const isBullet = line.startsWith('•') || line.startsWith('-')
+    const content = isBullet ? line.slice(1).trim() : line
+
+    if (isHeader) {
+      return (
+        <div key={`h-${idx}`} style={sectionHeader}>
+          {renderInlineLinks(line.slice(0, -1))}
+        </div>
+      )
+    }
+
+    if (isBullet) {
+      return (
+        <div key={`b-${idx}`} style={bulletRow}>
+          <span style={bulletDot}>•</span>
+          <span style={{ flex: 1 }}>{renderInlineLinks(content)}</span>
+        </div>
+      )
+    }
+
+    return (
+      <div key={`p-${idx}`} style={paragraphRow}>
+        {renderInlineLinks(line)}
+      </div>
+    )
+  })
+}
+
 const PROMPTS = [
   'What is my net worth?',
   'Where is most of my money?',
@@ -79,7 +137,10 @@ export function ChatPanel({ wallet, address }: Props) {
           <div key={m.id} style={{ display: 'flex', flexDirection: 'column', alignItems: m.role === 'user' ? 'flex-end' : 'flex-start', marginBottom: 18 }}>
             <div style={m.role === 'user' ? userBubble : aiBubble}>
               {m.role === 'assistant' && <span style={aiLabel}>ØRACLE</span>}
-              <pre style={msgText}>{m.content}</pre>
+              {m.role === 'assistant'
+                ? <div style={msgText}>{renderStructuredAssistantMessage(m.content)}</div>
+                : <div style={msgText}>{renderInlineLinks(m.content)}</div>
+              }
             </div>
             <span style={ts}>{m.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
@@ -188,6 +249,32 @@ const aiLabel: React.CSSProperties = {
 const msgText: React.CSSProperties = {
   margin: 0, fontSize: 13, lineHeight: 1.7, color: '#D0D0C8',
   whiteSpace: 'pre-wrap', fontFamily: "'IBM Plex Mono', monospace",
+}
+const msgLink: React.CSSProperties = {
+  color: '#7C83FF',
+  textDecoration: 'underline',
+}
+const sectionHeader: React.CSSProperties = {
+  color: '#E5E5DD',
+  fontSize: 12,
+  letterSpacing: 0.4,
+  marginTop: 6,
+  marginBottom: 6,
+  fontWeight: 700,
+}
+const bulletRow: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 8,
+  marginBottom: 6,
+}
+const bulletDot: React.CSSProperties = {
+  color: '#8F95FF',
+  lineHeight: 1.5,
+  marginTop: 1,
+}
+const paragraphRow: React.CSSProperties = {
+  marginBottom: 8,
 }
 const ts: React.CSSProperties = { fontSize: 10, color: '#333', marginTop: 4 }
 const dot: React.CSSProperties = {

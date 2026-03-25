@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { z } from 'zod'
 import { fetchWalletData } from '../services/wallet.service.js'
 import { chat } from '../services/ai.service.js'
+import { fetchMarketContext } from '../services/market.service.js'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -48,12 +49,38 @@ router.post('/chat', async (req, res) => {
   try {
     // Always fetch fresh wallet data for each chat request
     const wallet = await fetchWalletData(address)
-    console.log(wallet)
-    const response = await chat(messages, wallet)
+    const market = await fetchMarketContext(wallet)
+    const response = await chat(messages, wallet, market)
     res.json({ success: true, ...response })
   } catch (err: any) {
     console.error('[chat]', err.message)
     res.status(500).json({ error: err.message ?? 'AI error' })
+  }
+})
+
+// ─── GET /api/market/:address (ETH-focused context) ───────────────────────
+
+router.get('/market/:address', async (req, res) => {
+  const { address } = req.params
+
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+    return res.status(400).json({ error: 'Invalid Ethereum address' })
+  }
+
+  try {
+    const wallet = await fetchWalletData(address)
+    const market = await fetchMarketContext(wallet)
+    res.json({
+      success: true,
+      fearGreed: market.fearGreed,
+      portfolioImpact: market.portfolioImpact,
+      relevantNews: market.relevantNews.slice(0, 10),
+      latestNewsInsights: market.latestNewsInsights,
+      fetchedAt: market.fetchedAt,
+    })
+  } catch (err: any) {
+    console.error('[market]', err.message)
+    res.status(500).json({ error: err.message ?? 'Failed to fetch market data' })
   }
 })
 
