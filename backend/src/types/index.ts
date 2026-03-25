@@ -9,18 +9,39 @@ export interface TokenBalance {
   change24h?: number
 }
 
+export type TransactionActivity = 'swap' | 'send' | 'receive' | 'contract'
+
+export interface DecodedTransfer {
+  tokenAddress: string
+  symbol: string
+  name: string
+  decimals: number
+  logo?: string
+  from: string
+  to: string
+  amountRaw: string
+  amountFormatted: string
+  direction: 'in' | 'out'
+}
+
 export interface Transaction {
   hash: string
   from: string
   to: string
-  value: string // in ETH
+  value: string // native ETH attached to tx (may be 0 for pure token flows)
   valueUsd: number
   timestamp: number
-  description: string // human-readable
+  description: string
   gasUsed?: string
   gasPrice?: string
   status: 'success' | 'failed'
   method?: string
+  /** swap = traded one asset for another; send / receive = one-way flow */
+  activityType: TransactionActivity
+  /** ERC-20 + native ETH legs (same spirit as decode.js), enriched from token contract */
+  transfers: DecodedTransfer[]
+  feeNativeEth?: number
+  feeUsd?: number
 }
 
 export interface NFT {

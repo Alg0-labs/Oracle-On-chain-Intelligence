@@ -1,6 +1,6 @@
 import { Router } from 'express'
 import { z } from 'zod'
-import { fetchWalletData } from '../services/wallet.service.js'
+import { fetchWalletData, getTransactionsPaged } from '../services/wallet.service.js'
 import { chat } from '../services/ai.service.js'
 import { fetchMarketContext } from '../services/market.service.js'
 import dotenv from 'dotenv'
@@ -23,6 +23,33 @@ router.get('/wallet/:address', async (req, res) => {
   } catch (err: any) {
     console.error('[wallet]', err.message)
     res.status(500).json({ error: err.message ?? 'Failed to fetch wallet data' })
+  }
+})
+
+// ─── GET /api/wallet/:address/transactions ────────────────────────────────
+
+router.get('/wallet/:address/transactions', async (req, res) => {
+  const { address } = req.params
+
+  if (!/^0x[0-9a-fA-F]{40}$/.test(address)) {
+    return res.status(400).json({ error: 'Invalid Ethereum address' })
+  }
+
+  const offset = typeof req.query.offset === 'string' ? req.query.offset : undefined
+  const limit = Math.min(parseInt(String(req.query.limit ?? '10'), 10) || 10, 50)
+
+  try {
+    const ethPriceRes = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
+    )
+    const ethPriceJson = await ethPriceRes.json() as { ethereum?: { usd?: number } }
+    const ethPrice = ethPriceJson?.ethereum?.usd ?? 2500
+
+    const result = await getTransactionsPaged(address, ethPrice, offset, limit)
+    res.json({ success: true, ...result })
+  } catch (err: any) {
+    console.error('[transactions]', err.message)
+    res.status(500).json({ error: err.message ?? 'Failed to fetch transactions' })
   }
 })
 

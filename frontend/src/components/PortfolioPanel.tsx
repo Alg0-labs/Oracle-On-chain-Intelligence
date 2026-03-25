@@ -1,4 +1,7 @@
-import type { WalletData, MarketData, MarketNewsInsight } from '../types/index.js'
+import { useState, useCallback } from 'react'
+import type { CSSProperties } from 'react'
+import type { WalletData, Transaction, DecodedTransfer, MarketData } from '../types/index.js'
+import { fetchTransactions } from '../lib/api.js'
 
 function Sparkline({ positive }: { positive: boolean }) {
   const points = positive
@@ -23,6 +26,206 @@ function tokenColor(symbol: string): string {
   return TOKEN_COLORS[symbol.toUpperCase()] ?? '#6366F1'
 }
 
+function activityBadgeStyle(type: string): CSSProperties {
+  const colors: Record<string, { fg: string; bg: string }> = {
+    swap:     { fg: '#A78BFA', bg: 'rgba(167,139,250,0.12)' },
+    send:     { fg: '#FBBF24', bg: 'rgba(251,191,36,0.1)' },
+    receive:  { fg: '#4ADE80', bg: 'rgba(74,222,128,0.1)' },
+    contract: { fg: '#888',    bg: 'rgba(255,255,255,0.04)' },
+  }
+  const c = colors[type] ?? colors.contract
+  return {
+    fontSize: 9, fontWeight: 700, letterSpacing: 1,
+    color: c.fg, background: c.bg,
+    border: `1px solid ${c.fg}33`,
+    borderRadius: 4, padding: '2px 6px', fontFamily: 'monospace',
+    whiteSpace: 'nowrap' as const,
+  }
+}
+
+// ─── Transaction Detail Modal ─────────────────────────────────────────────────
+
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false)
+  return (
+    <button
+      onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#4ADE80' : '#555', fontSize: 10, padding: '0 4px' }}
+    >
+      {copied ? '✓' : '⎘'}
+    </button>
+  )
+}
+
+function DetailRow({ label, value, mono = false, children }: {
+  label: string; value?: string; mono?: boolean; children?: React.ReactNode
+}) {
+  return (
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ color: '#555', fontSize: 11, letterSpacing: 1, minWidth: 100, flexShrink: 0 }}>{label}</span>
+      {children ?? (
+        <span style={{ color: '#C0C0B8', fontSize: 12, fontFamily: mono ? 'monospace' : 'inherit', wordBreak: 'break-all', textAlign: 'right' }}>
+          {value}
+        </span>
+      )}
+    </div>
+  )
+}
+
+function TransactionDetailModal({ tx, onClose }: { tx: Transaction; onClose: () => void }) {
+  const statusColor = tx.status === 'success' ? '#4ADE80' : '#F87171'
+  const date = new Date(tx.timestamp)
+  return (
+    <div style={overlay} onClick={onClose}>
+      <div style={modal} onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={activityBadgeStyle(tx.activityType)}>{tx.activityType.toUpperCase()}</span>
+            <span style={{ color: statusColor, fontSize: 10, fontFamily: 'monospace', letterSpacing: 1 }}>
+              ● {tx.status.toUpperCase()}
+            </span>
+          </div>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
+        </div>
+
+        {/* Hash */}
+        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '10px 14px', marginBottom: 16 }}>
+          <div style={{ color: '#555', fontSize: 10, letterSpacing: 1, marginBottom: 4 }}>TRANSACTION HASH</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+            <span style={{ color: '#A0A0A0', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.hash}</span>
+            <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
+              <CopyButton text={tx.hash} />
+              <a href={`https://etherscan.io/tx/${tx.hash}`} target="_blank" rel="noreferrer"
+                style={{ color: '#6366F1', fontSize: 10, textDecoration: 'none' }}>↗ Etherscan</a>
+            </div>
+          </div>
+        </div>
+
+        {/* Transfers */}
+        {tx.transfers.length > 0 && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={modalSection}>TRANSFERS</div>
+            {tx.transfers.map((t, i) => (
+              <TransferRow key={i} t={t} />
+            ))}
+          </div>
+        )}
+
+        {/* Fee */}
+        {(tx.feeNativeEth != null || tx.feeUsd != null) && (
+          <div style={{ marginBottom: 16 }}>
+            <div style={modalSection}>NETWORK FEE</div>
+            <div style={{ display: 'flex', gap: 20 }}>
+              {tx.feeNativeEth != null && (
+                <div>
+                  <div style={{ fontSize: 10, color: '#555', letterSpacing: 1 }}>ETH</div>
+                  <div style={{ fontSize: 16, color: '#E8E8E0', fontWeight: 700, marginTop: 2 }}>{tx.feeNativeEth.toFixed(6)}</div>
+                </div>
+              )}
+              {tx.feeUsd != null && (
+                <div>
+                  <div style={{ fontSize: 10, color: '#555', letterSpacing: 1 }}>USD</div>
+                  <div style={{ fontSize: 16, color: '#E8E8E0', fontWeight: 700, marginTop: 2 }}>${tx.feeUsd.toFixed(2)}</div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Details */}
+        <div style={modalSection}>DETAILS</div>
+        <DetailRow label="DATE" value={`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`} />
+        <DetailRow label="FROM">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ color: '#C0C0B8', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.from}</span>
+            <CopyButton text={tx.from} />
+          </div>
+        </DetailRow>
+        <DetailRow label="TO">
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+            <span style={{ color: '#C0C0B8', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.to}</span>
+            <CopyButton text={tx.to} />
+          </div>
+        </DetailRow>
+        {tx.value !== '0.000000' && (
+          <DetailRow label="ETH VALUE" value={`${tx.value} ETH ($${tx.valueUsd.toFixed(2)})`} />
+        )}
+        {tx.method && <DetailRow label="METHOD" value={tx.method} mono />}
+        {tx.gasUsed && <DetailRow label="GAS USED" value={Number(tx.gasUsed).toLocaleString()} />}
+        {tx.gasPrice && <DetailRow label="GAS PRICE" value={`${(Number(tx.gasPrice) / 1e9).toFixed(2)} Gwei`} />}
+      </div>
+    </div>
+  )
+}
+
+function TransferRow({ t }: { t: DecodedTransfer }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10,
+      padding: '10px 12px', borderRadius: 6, marginBottom: 4,
+      background: t.direction === 'out' ? 'rgba(251,191,36,0.05)' : 'rgba(74,222,128,0.05)',
+      border: `1px solid ${t.direction === 'out' ? 'rgba(251,191,36,0.12)' : 'rgba(74,222,128,0.12)'}`,
+    }}>
+      <span style={{ fontSize: 16, color: t.direction === 'out' ? '#FBBF24' : '#4ADE80', lineHeight: 1 }}>
+        {t.direction === 'out' ? '↑' : '↓'}
+      </span>
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          {t.logo && <img src={t.logo} alt={t.symbol} style={{ width: 16, height: 16, borderRadius: '50%' }} onError={e => (e.currentTarget.style.display = 'none')} />}
+          <span style={{ color: '#E8E8E0', fontSize: 13, fontWeight: 700 }}>{t.amountFormatted}</span>
+          <span style={{ color: '#6366F1', fontSize: 13, fontWeight: 700 }}>{t.symbol}</span>
+        </div>
+        <div style={{ color: '#555', fontSize: 10, marginTop: 2 }}>{t.name}</div>
+      </div>
+      <div style={{ textAlign: 'right' }}>
+        <div style={{ color: t.direction === 'out' ? '#FBBF24' : '#4ADE80', fontSize: 10, fontWeight: 600 }}>
+          {t.direction === 'out' ? 'SENT' : 'RECEIVED'}
+        </div>
+        <a href={`https://etherscan.io/token/${t.tokenAddress}`} target="_blank" rel="noreferrer"
+          style={{ color: '#444', fontSize: 9, textDecoration: 'none' }}>view token ↗</a>
+      </div>
+    </div>
+  )
+}
+
+// ─── Transaction Row (list) ───────────────────────────────────────────────────
+
+function TxRow({ tx, onClick }: { tx: Transaction; onClick: () => void }) {
+  return (
+    <div onClick={onClick} style={{ ...actRow, cursor: 'pointer' }}
+      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+      onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
+    >
+      <span style={{ color: tx.status === 'success' ? '#6366F1' : '#F87171', fontSize: 8, flexShrink: 0 }}>◆</span>
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+          <span style={activityBadgeStyle(tx.activityType)}>{tx.activityType.toUpperCase()}</span>
+          <span style={{ color: '#C0C0B8', fontSize: 12 }}>{tx.description}</span>
+        </div>
+        {tx.transfers.length > 0 && (
+          <div style={{ color: '#555', fontSize: 10, marginTop: 5, lineHeight: 1.6 }}>
+            {tx.transfers.map((t, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                {t.logo && <img src={t.logo} alt={t.symbol} style={{ width: 10, height: 10, borderRadius: '50%' }} onError={e => (e.currentTarget.style.display = 'none')} />}
+                <span style={{ color: t.direction === 'out' ? '#FBBF24' : '#4ADE80' }}>{t.direction === 'out' ? '↑' : '↓'}</span>
+                <span>{t.amountFormatted} {t.symbol}</span>
+                <span style={{ color: '#3a3a3a' }}>· {t.name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ color: '#3a3a3a', fontSize: 10, marginTop: 4 }}>
+          {new Date(tx.timestamp).toLocaleDateString()} · {tx.hash.slice(0, 10)}…
+        </div>
+      </div>
+      <span style={{ color: '#444', fontSize: 10, flexShrink: 0 }}>›</span>
+    </div>
+  )
+}
+
+// ─── Main Panel ───────────────────────────────────────────────────────────────
+
 interface Props {
   wallet: WalletData
   market: MarketData | null
@@ -34,6 +237,30 @@ export function PortfolioPanel({ wallet, market }: Props) {
     ...wallet.tokens,
   ]
   const total = allAssets.reduce((s, a) => s + a.usdValue, 0) || 1
+
+  const [txList, setTxList] = useState<Transaction[]>(wallet.transactions)
+  const [nextCursor, setNextCursor] = useState<string | null>(null)
+  const [hasMore, setHasMore] = useState(wallet.transactions.length >= 10)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null)
+
+  const loadMore = useCallback(async () => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    try {
+      const result = await fetchTransactions(wallet.address, nextCursor ?? undefined, 10)
+      setTxList(prev => {
+        const existing = new Set(prev.map(t => t.hash))
+        return [...prev, ...result.transactions.filter(t => !existing.has(t.hash))]
+      })
+      setNextCursor(result.nextCursor)
+      setHasMore(result.hasMore)
+    } catch {
+      /* non-fatal */
+    } finally {
+      setLoadingMore(false)
+    }
+  }, [loadingMore, hasMore, nextCursor, wallet.address])
 
   return (
     <div style={panel}>
@@ -105,21 +332,36 @@ export function PortfolioPanel({ wallet, market }: Props) {
         </>
       )}
 
-      {/* Recent Transactions */}
-      <div style={sectionTitle}>RECENT ACTIVITY</div>
-      {wallet.transactions.slice(0, 8).map((tx) => (
-        <div key={tx.hash} style={actRow}>
-          <span style={{ color: tx.status === 'success' ? '#6366F1' : '#F87171', fontSize: 8 }}>◆</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ color: '#C0C0B8', fontSize: 12 }}>{tx.description}</div>
-            <div style={{ color: '#444', fontSize: 10, marginTop: 2 }}>
-              {new Date(tx.timestamp).toLocaleDateString()} · {tx.hash.slice(0, 10)}...
-            </div>
-          </div>
-          <a href={`https://etherscan.io/tx/${tx.hash}`} target="_blank" rel="noreferrer" style={{ color: '#444', fontSize: 10, textDecoration: 'none' }}>↗</a>
-        </div>
+      {/* Transactions */}
+      <div style={{ ...sectionTitle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <span>RECENT ACTIVITY</span>
+        <span style={{ color: '#3a3a3a', fontWeight: 400 }}>{txList.length} loaded</span>
+      </div>
+
+      {txList.map((tx) => (
+        <TxRow key={tx.hash} tx={tx} onClick={() => setSelectedTx(tx)} />
       ))}
 
+      {hasMore && (
+        <button
+          onClick={loadMore}
+          disabled={loadingMore}
+          style={loadMoreBtn}
+        >
+          {loadingMore ? 'Loading…' : 'Load more transactions'}
+        </button>
+      )}
+
+      {!hasMore && txList.length > 0 && (
+        <div style={{ textAlign: 'center', color: '#3a3a3a', fontSize: 10, padding: '14px 0', letterSpacing: 1 }}>
+          ALL TRANSACTIONS LOADED
+        </div>
+      )}
+
+      {/* Transaction detail modal */}
+      {selectedTx && (
+        <TransactionDetailModal tx={selectedTx} onClose={() => setSelectedTx(null)} />
+      )}
       {/* Market Intelligence */}
       {!market ? (
         <div style={{ color: '#666', fontSize: 12 }}>Loading market intelligence...</div>
@@ -218,27 +460,53 @@ function Metric({ label, value }: { label: string; value: string }) {
   )
 }
 
-const panel: React.CSSProperties = { flex: 1, overflowY: 'auto', padding: 24 }
-const sectionTitle: React.CSSProperties = { fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 14, marginTop: 24 }
-const tokenRow: React.CSSProperties = {
+const panel: CSSProperties = { flex: 1, overflowY: 'auto', padding: 24 }
+const sectionTitle: CSSProperties = { fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 14, marginTop: 24 }
+const tokenRow: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
 }
-const symStyle: React.CSSProperties = { fontSize: 14, fontWeight: 700, color: '#E8E8E0' }
-const nameStyle: React.CSSProperties = { fontSize: 11, color: '#555', marginTop: 2 }
-const valStyle: React.CSSProperties = { fontSize: 14, fontWeight: 600, color: '#E8E8E0' }
-const pctStyle: React.CSSProperties = { fontSize: 12, color: '#555', width: 40, textAlign: 'right' }
-const allocBar: React.CSSProperties = {
+const symStyle: CSSProperties = { fontSize: 14, fontWeight: 700, color: '#E8E8E0' }
+const nameStyle: CSSProperties = { fontSize: 11, color: '#555', marginTop: 2 }
+const valStyle: CSSProperties = { fontSize: 14, fontWeight: 600, color: '#E8E8E0' }
+const pctStyle: CSSProperties = { fontSize: 12, color: '#555', width: 40, textAlign: 'right' }
+const allocBar: CSSProperties = {
   height: 8, borderRadius: 4, display: 'flex', overflow: 'hidden',
   background: 'rgba(255,255,255,0.05)',
 }
-const riskBox: React.CSSProperties = {
+const riskBox: CSSProperties = {
   background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
   borderRadius: 8, padding: 16,
 }
-const actRow: React.CSSProperties = {
-  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 0',
+const actRow: CSSProperties = {
+  display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 8px',
   borderBottom: '1px solid rgba(255,255,255,0.03)',
+  borderRadius: 6, transition: 'background 0.15s',
+}
+const loadMoreBtn: CSSProperties = {
+  width: '100%', marginTop: 12, padding: '10px 0',
+  background: 'rgba(99,102,241,0.08)',
+  border: '1px solid rgba(99,102,241,0.2)',
+  borderRadius: 6, color: '#6366F1',
+  fontSize: 11, letterSpacing: 1, cursor: 'pointer',
+  fontFamily: 'monospace',
+}
+const overlay: CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1000,
+  background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  padding: 20,
+}
+const modal: CSSProperties = {
+  background: '#111',
+  border: '1px solid rgba(255,255,255,0.08)',
+  borderRadius: 12, padding: 24,
+  width: '100%', maxWidth: 520,
+  maxHeight: '85vh', overflowY: 'auto',
+}
+const modalSection: CSSProperties = {
+  fontSize: 10, color: '#555', letterSpacing: 2,
+  marginBottom: 10, marginTop: 0,
 }
 const newsCard: React.CSSProperties = {
   border: '1px solid rgba(255,255,255,0.08)',

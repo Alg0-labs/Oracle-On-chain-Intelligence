@@ -38,23 +38,54 @@ const SEND_ETH_TOOL = {
 
 // ─── Build system prompt from live wallet data ────────────────────────────
 
+function fmtUsd(n: number) {
+  return `$${n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+}
+
+function buildTokenSection(wallet: WalletData): string {
+  if (wallet.tokens.length === 0) return '  (none)'
+  return wallet.tokens.map(t => {
+    const change = t.change24h !== undefined
+      ? ` | 24h: ${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(2)}%`
+      : ''
+    const contract = t.contractAddress ? ` | contract: ${t.contractAddress}` : ''
+    return `  • ${t.symbol} (${t.name}): balance=${t.balance} | value=${fmtUsd(t.usdValue)}${change}${contract}`
+  }).join('\n')
+}
+
+function buildTxSection(wallet: WalletData): string {
+  if (wallet.transactions.length === 0) return '  (none)'
+  return wallet.transactions.map(tx => {
+    const date = new Date(tx.timestamp).toISOString().slice(0, 10)
+    const fee = tx.feeNativeEth != null
+      ? ` | fee: ${tx.feeNativeEth.toFixed(6)} ETH${tx.feeUsd != null ? ` (${fmtUsd(tx.feeUsd)})` : ''}`
+      : ''
+    const ethVal = parseFloat(tx.value) > 0 ? ` | ETH: ${tx.value} (${fmtUsd(tx.valueUsd)})` : ''
+    const gasLine = tx.gasUsed ? ` | gas: ${Number(tx.gasUsed).toLocaleString()}` : ''
+
+    const transferLines = tx.transfers.length > 0
+      ? '\n' + tx.transfers.map(tr => {
+          const dir = tr.direction === 'out' ? '↑ sent' : '↓ received'
+          return `      ${dir} ${tr.amountFormatted} ${tr.symbol} (${tr.name}) | contract: ${tr.tokenAddress} | from: ${tr.from} → to: ${tr.to}`
+        }).join('\n')
+      : ''
+
+    return [
+      `  [${tx.activityType.toUpperCase()}] ${date} | ${tx.status.toUpperCase()} | hash: ${tx.hash}`,
+      `    from: ${tx.from} | to: ${tx.to}${ethVal}${fee}${gasLine}`,
+      `    ${tx.description}${transferLines}`,
+    ].join('\n')
+  }).join('\n\n')
+}
+
+function buildNftSection(wallet: WalletData): string {
+  if (wallet.nfts.length === 0) return '  (none)'
+  return wallet.nfts.map(n =>
+    `  • ${n.name} | collection: ${n.collection} | tokenId: ${n.tokenId}`
+  ).join('\n')
+}
+
 function buildSystemPrompt(wallet: WalletData, market: MarketContext): string {
-  const tokenSummary = wallet.tokens.length > 0
-    ? wallet.tokens.map(t =>
-        `  • ${t.symbol} (${t.name}): ${t.balance} tokens = $${t.usdValue.toLocaleString()} ${t.change24h !== undefined ? `(${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(1)}% 24h)` : ''}`
-      ).join('\n')
-    : '  (no ERC-20 tokens found)'
-
-  const txSummary = wallet.transactions.length > 0
-    ? wallet.transactions.slice(0, 10).map(tx =>
-        `  • ${tx.description} · ${new Date(tx.timestamp).toLocaleDateString()}`
-      ).join('\n')
-    : '  (no recent transactions)'
-
-  const nftSummary = wallet.nfts.length > 0
-    ? `  • ${wallet.nfts.length} NFTs held`
-    : '  (no NFTs)'
-
   const ethImpact = market.portfolioImpact[0]
   const ethImpactLine = ethImpact
     ? `  • ETH: $${ethImpact.holdingUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${ethImpact.percentOfPortfolio.toFixed(1)}% of portfolio) · ${ethImpact.sentiment.toUpperCase()} · ${ethImpact.priceChange24h >= 0 ? '+' : ''}${ethImpact.priceChange24h.toFixed(2)}% (24h) · ${ethImpact.relatedNewsCount} related news`
@@ -68,28 +99,27 @@ function buildSystemPrompt(wallet: WalletData, market: MarketContext): string {
         )
         .join('\n')
     : '  (no ETH-specific market headlines right now)'
+  return `You are ØRACLE — a sharp, precise on-chain financial AI assistant. You have full real-time access to the user's wallet data fetched this session.
 
-  return `You are ØRACLE — a sharp, precise on-chain financial AI assistant. You have full access to the user's live wallet data fetched from the blockchain right now.
+━━━━━━━━━━━━━━━━ WALLET OVERVIEW ━━━━━━━━━━━━━━━━
+Address:           ${wallet.address}${wallet.ensName ? ` (${wallet.ensName})` : ''}
+Network:           ${wallet.chain}
+ETH Balance:       ${wallet.ethBalance} ETH (${fmtUsd(wallet.ethBalanceUsd)})
+Total Net Worth:   ${fmtUsd(wallet.netWorthUsd)}
+Risk Level:        ${wallet.riskLevel} — ${wallet.riskReason}
+Stablecoin Alloc:  ${wallet.stablecoinPct.toFixed(2)}%
+Top Holding:       ${wallet.topHoldingPct.toFixed(2)}% of portfolio
 
-WALLET DATA (live, fetched this session):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Address: ${wallet.address}${wallet.ensName ? ` (${wallet.ensName})` : ''}
-Network: ${wallet.chain}
-ETH Balance: ${wallet.ethBalance} ETH ($${wallet.ethBalanceUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })})
-Total Net Worth: $${wallet.netWorthUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
-Risk Level: ${wallet.riskLevel} — ${wallet.riskReason}
-Stablecoin Allocation: ${wallet.stablecoinPct.toFixed(1)}%
-Top Holding: ${wallet.topHoldingPct.toFixed(1)}% of portfolio
+━━━━━━━━━━━━━━━━ TOKEN HOLDINGS (${wallet.tokens.length}) ━━━━━━━━━━━━━━━━
+${buildTokenSection(wallet)}
 
-Token Holdings:
-${tokenSummary}
+━━━━━━━━━━━━━━━━ TRANSACTION HISTORY (${wallet.transactions.length} loaded) ━━━━━━━━━━━━━━━━
+${buildTxSection(wallet)}
 
-Recent Transactions (last 10):
-${txSummary}
+━━━━━━━━━━━━━━━━ NFTs (${wallet.nfts.length}) ━━━━━━━━━━━━━━━━
+${buildNftSection(wallet)}
 
-NFTs:
-${nftSummary}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 MARKET CONTEXT (ETH-focused, live this session):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -163,7 +193,7 @@ export async function chat(
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1024,
+    max_tokens: 2048,
     system: systemPrompt,
     messages: messages.map(m => ({ role: m.role, content: m.content })),
     tools: [SEND_ETH_TOOL],
