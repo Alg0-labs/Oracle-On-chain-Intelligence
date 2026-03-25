@@ -1,4 +1,4 @@
-import type { WalletData, TokenBalance, Transaction, NFT } from '../types/index.js'
+import type { WalletData, TokenBalance, NativeBalance, ChainBreakdown, Transaction, NFT } from '../types/index.js'
 import {
   attachTokenMeta,
   buildTransactionDescription,
@@ -19,6 +19,27 @@ const MORALIS_BASE = 'https://deep-index.moralis.io/api/v2.2'
 const DUNE_SIM_BASE = 'https://api.sim.dune.com/v1/evm'
 
 const NATIVE_ETH_PLACEHOLDER = '0x0000000000000000000000000000000000000000' as const
+
+// ─── Dune chain display name mapping ─────────────────────────────────────────
+
+const DUNE_CHAIN_DISPLAY: Record<string, string> = {
+  ethereum:    'Ethereum',
+  polygon:     'Polygon',
+  bsc:         'BSC',
+  arbitrum:    'Arbitrum',
+  optimism:    'Optimism',
+  base:        'Base',
+  avalanche_c: 'Avalanche',
+  avalanche:   'Avalanche',
+  gnosis:      'Gnosis',
+  scroll:      'Scroll',
+  linea:       'Linea',
+  zksync:      'zkSync',
+  mantle:      'Mantle',
+}
+
+// chains to query — covers the most active EVMs
+const BALANCE_CHAIN_IDS = '1,137,56,42161,10,8453,43114'
 
 function chunk<T>(arr: T[], size: number): T[][] {
   const out: T[][] = []
@@ -54,20 +75,6 @@ async function duneFetch(path: string): Promise<any> {
   return res.json()
 }
 
-// ─── ETH Price ──────────────────────────────────────────────────────────────
-
-async function getEthPrice(): Promise<number> {
-  try {
-    const res = await fetch(
-      'https://api.coingecko.com/api/v3/simple/price?ids=ethereum&vs_currencies=usd'
-    )
-    const json = await res.json()
-    return json?.ethereum?.usd ?? 2500
-  } catch {
-    return 2500
-  }
-}
-
 // ─── ENS Name ───────────────────────────────────────────────────────────────
 
 async function getEnsName(address: string): Promise<string | undefined> {
@@ -79,49 +86,69 @@ async function getEnsName(address: string): Promise<string | undefined> {
   }
 }
 
-// ─── ETH Balance ────────────────────────────────────────────────────────────
+// ─── Dune SIM: all-chain balances in one call ────────────────────────────────
 
-async function getEthBalance(address: string): Promise<string> {
-  try {
-    const data = await moralisFetch(`/${address}/balance`)
-    const wei = BigInt(data.balance)
-    const eth = Number(wei) / 1e18
-    return eth.toFixed(6)
-  } catch {
-    return '0'
-  }
-}
+async function getDuneBalances(address: string): Promise<{
+  nativeBalances: NativeBalance[]
+  tokens: TokenBalance[]
+  ethPriceUsd: number
+}> {
+  const data = await duneFetch(
+    `/balances/${address}?chain_ids=${BALANCE_CHAIN_IDS}&metadata=logo&exclude_spam_tokens=true&historical_prices=24&limit=1000`
+  )
 
-// ─── Token Balances ─────────────────────────────────────────────────────────
+  const balances: any[] = data.balances ?? []
+  const nativeBalances: NativeBalance[] = []
+  const tokens: TokenBalance[] = []
+  let ethPriceUsd = 2500
 
-async function getTokenBalances(address: string): Promise<TokenBalance[]> {
-  try {
-    const data = await moralisFetch(`/${address}/erc20?chain=eth`)
-    const tokens: TokenBalance[] = []
+  for (const b of balances) {
+    const chainDisplay = DUNE_CHAIN_DISPLAY[b.chain as string] ?? (b.chain as string) ?? 'Unknown'
+    const chainId: number = b.chain_id ?? 0
+    const decimals: number = b.decimals ?? 18
+    const rawAmt = BigInt(b.amount ?? '0')
+    const balance = (Number(rawAmt) / Math.pow(10, decimals)).toFixed(6)
+    const balanceUsd: number = b.value_usd ?? 0
 
-    for (const t of (data as any[]).slice(0, 20)) {
-      const decimals = parseInt(t.decimals ?? '18')
-      const raw = BigInt(t.balance ?? '0')
-      const balance = (Number(raw) / Math.pow(10, decimals)).toFixed(4)
-      const usdValue = parseFloat(t.usd_value ?? '0')
+    // 24h price change from historical_prices[0] (24h ago)
+    const price24hAgo: number | undefined = b.historical_prices?.[0]?.price_usd
+    const change24h =
+      b.price_usd != null && price24hAgo != null && price24hAgo > 0
+        ? ((b.price_usd - price24hAgo) / price24hAgo) * 100
+        : undefined
 
-      if (usdValue < 0.01) continue // skip dust
-
+    if (b.address === 'native') {
+      if (chainId === 1 && b.price_usd) ethPriceUsd = b.price_usd
+      nativeBalances.push({
+        chain: chainDisplay,
+        chainId,
+        symbol: b.symbol ?? '?',
+        name: chainDisplay,
+        balance,
+        balanceUsd,
+      })
+    } else {
       tokens.push({
-        symbol: t.symbol ?? 'UNKNOWN',
-        name: t.name ?? t.symbol ?? 'Unknown Token',
+        symbol: b.symbol ?? 'UNKNOWN',
+        name: b.name ?? b.symbol ?? 'Unknown Token',
         balance,
         decimals,
-        usdValue,
-        contractAddress: t.token_address,
-        logo: t.logo,
-        change24h: parseFloat(t.usd_price_24hr_percent_change ?? '0'),
+        usdValue: balanceUsd,
+        contractAddress: b.address,
+        logo: b.logo,
+        change24h,
+        chain: chainDisplay,
+        chainId,
       })
     }
+  }
 
-    return tokens.sort((a, b) => b.usdValue - a.usdValue)
-  } catch {
-    return []
+  console.log(`[dune-balances] ${nativeBalances.length} native, ${tokens.length} ERC-20 tokens, ETH=$${ethPriceUsd}`)
+
+  return {
+    nativeBalances,
+    tokens: tokens.sort((a, b) => b.usdValue - a.usdValue),
+    ethPriceUsd,
   }
 }
 
@@ -350,23 +377,39 @@ function analyzeRisk(
 // ─── Main Export ─────────────────────────────────────────────────────────────
 
 export async function fetchWalletData(address: string): Promise<WalletData> {
-  const [ethPrice, ensName, ethBalanceStr] = await Promise.all([
-    getEthPrice(),
+  const [ensName, balanceData, nfts] = await Promise.all([
     getEnsName(address),
-    getEthBalance(address),
-  ])
-
-  const ethBalance = parseFloat(ethBalanceStr)
-  const ethBalanceUsd = ethBalance * ethPrice
-
-  const [tokens, transactions, nfts] = await Promise.all([
-    getTokenBalances(address),
-    getTransactions(address, ethPrice),
+    getDuneBalances(address),
     getNFTs(address),
   ])
 
+  const { nativeBalances, tokens, ethPriceUsd } = balanceData
+
+  // Fetch transactions with the live ETH price from Dune
+  const transactions = await getTransactions(address, ethPriceUsd)
+
+  // Ethereum mainnet native balance (for backward compat fields)
+  const ethNative = nativeBalances.find(n => n.chainId === 1)
+  const ethBalanceStr = ethNative?.balance ?? '0'
+  const ethBalanceUsd = ethNative?.balanceUsd ?? 0
+
+  const nativeNetWorth = nativeBalances.reduce((s, n) => s + n.balanceUsd, 0)
   const tokenNetWorth = tokens.reduce((s, t) => s + t.usdValue, 0)
-  const netWorthUsd = ethBalanceUsd + tokenNetWorth
+  const netWorthUsd = nativeNetWorth + tokenNetWorth
+
+  // Per-chain breakdown (native + tokens)
+  const chainMap = new Map<string, { chainId: number; usdValue: number; nativeSymbol: string }>()
+  for (const n of nativeBalances) {
+    chainMap.set(n.chain, { chainId: n.chainId, usdValue: n.balanceUsd, nativeSymbol: n.symbol })
+  }
+  for (const t of tokens) {
+    const entry = chainMap.get(t.chain)
+    if (entry) entry.usdValue += t.usdValue
+  }
+  const chainBreakdown: ChainBreakdown[] = [...chainMap.entries()]
+    .map(([chain, v]) => ({ chain, ...v }))
+    .filter(c => c.usdValue > 0.01)
+    .sort((a, b) => b.usdValue - a.usdValue)
 
   const { riskLevel, riskReason, topHoldingPct, stablecoinPct } = analyzeRisk(
     tokens, ethBalanceStr, ethBalanceUsd, netWorthUsd
@@ -379,6 +422,8 @@ export async function fetchWalletData(address: string): Promise<WalletData> {
     ethBalanceUsd,
     netWorthUsd,
     tokens,
+    nativeBalances,
+    chainBreakdown,
     transactions,
     nfts,
     riskLevel,

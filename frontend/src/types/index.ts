@@ -7,6 +7,24 @@ export interface TokenBalance {
   contractAddress?: string
   logo?: string
   change24h?: number
+  chain: string
+  chainId?: number
+}
+
+export interface NativeBalance {
+  chain: string
+  chainId: number
+  symbol: string
+  name: string
+  balance: string
+  balanceUsd: number
+}
+
+export interface ChainBreakdown {
+  chain: string
+  chainId: number
+  usdValue: number
+  nativeSymbol: string
 }
 
 export type TransactionActivity = 'swap' | 'send' | 'receive' | 'contract'
@@ -56,6 +74,8 @@ export interface WalletData {
   ethBalanceUsd: number
   netWorthUsd: number
   tokens: TokenBalance[]
+  nativeBalances: NativeBalance[]
+  chainBreakdown: ChainBreakdown[]
   transactions: Transaction[]
   nfts: NFT[]
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
@@ -72,12 +92,27 @@ export interface ChatMessage {
   timestamp: Date
 }
 
-export interface SendTxIntent {
+export interface SendEthIntent {
   type: 'SEND_ETH'
   to: string
-  amount: string
+  amount: string   // human-readable ETH (e.g. "0.1")
+  reason: string
+  chainId?: number // defaults to 1 (Ethereum mainnet)
+}
+
+export interface SendTokenIntent {
+  type: 'SEND_TOKEN'
+  to: string           // recipient address
+  amount: string       // human-readable token amount (e.g. "100")
+  tokenSymbol: string
+  tokenName: string
+  tokenAddress: string // ERC-20 contract address
+  decimals: number
+  chainId: number
   reason: string
 }
+
+export type SendTxIntent = SendEthIntent | SendTokenIntent
 
 export interface FearGreedData {
   value: number

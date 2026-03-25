@@ -1,6 +1,10 @@
 import { useState, useCallback } from 'react'
 import type { CSSProperties } from 'react'
+<<<<<<< Updated upstream
 import type { WalletData, Transaction, DecodedTransfer, MarketData } from '../types/index.js'
+=======
+import type { WalletData, Transaction, DecodedTransfer, MarketData, MarketNewsInsight, NativeBalance } from '../types/index.js'
+>>>>>>> Stashed changes
 import { fetchTransactions } from '../lib/api.js'
 
 function Sparkline({ positive }: { positive: boolean }) {
@@ -19,11 +23,42 @@ const TOKEN_COLORS: Record<string, string> = {
   BTC: '#F7931A', WBTC: '#F7931A',
   USDC: '#2775CA', USDT: '#26A17B', DAI: '#F5AC37',
   SOL: '#9945FF', ARB: '#12AAFF', OP: '#FF0420',
-  MATIC: '#8247E5', LINK: '#375BD2', UNI: '#FF007A',
-  AAVE: '#B6509E', MKR: '#1AAB9B',
+  MATIC: '#8247E5', POL: '#8247E5', LINK: '#375BD2', UNI: '#FF007A',
+  AAVE: '#B6509E', MKR: '#1AAB9B', BNB: '#F3BA2F', AVAX: '#E84142',
 }
 function tokenColor(symbol: string): string {
   return TOKEN_COLORS[symbol.toUpperCase()] ?? '#6366F1'
+}
+
+const CHAIN_COLORS: Record<string, string> = {
+  Ethereum:  '#627EEA',
+  Polygon:   '#8247E5',
+  BSC:       '#F3BA2F',
+  Arbitrum:  '#12AAFF',
+  Optimism:  '#FF0420',
+  Base:      '#0052FF',
+  Avalanche: '#E84142',
+}
+function chainColor(chain: string): string {
+  return CHAIN_COLORS[chain] ?? '#6366F1'
+}
+
+function ChainBadge({ chain }: { chain: string }) {
+  const short: Record<string, string> = {
+    Ethereum: 'ETH', Polygon: 'POLY', BSC: 'BSC',
+    Arbitrum: 'ARB', Optimism: 'OP', Base: 'BASE', Avalanche: 'AVAX',
+  }
+  const label = short[chain] ?? chain.slice(0, 4).toUpperCase()
+  const color = chainColor(chain)
+  return (
+    <span style={{
+      fontSize: 8, fontWeight: 700, letterSpacing: 0.8,
+      color, background: `${color}18`,
+      border: `1px solid ${color}44`,
+      borderRadius: 3, padding: '1px 4px',
+      fontFamily: 'monospace', flexShrink: 0,
+    }}>{label}</span>
+  )
 }
 
 function activityBadgeStyle(type: string): CSSProperties {
@@ -232,11 +267,25 @@ interface Props {
 }
 
 export function PortfolioPanel({ wallet, market }: Props) {
+  // Merge native balances (all chains) + ERC-20 tokens into one unified list
+  const nativeAssets = (wallet.nativeBalances ?? [])
+    .filter(n => parseFloat(n.balance) > 0 || n.balanceUsd > 0)
+    .map((n: NativeBalance) => ({
+      symbol: n.symbol,
+      name: n.chain === 'Ethereum' ? 'Ethereum' : `${n.name} (native)`,
+      usdValue: n.balanceUsd,
+      balance: n.balance,
+      change24h: undefined as number | undefined,
+      chain: n.chain,
+      chainId: n.chainId,
+    }))
+
   const allAssets = [
-    { symbol: 'ETH', name: 'Ethereum', usdValue: wallet.ethBalanceUsd, balance: wallet.ethBalance, change24h: undefined as number | undefined },
+    ...nativeAssets,
     ...wallet.tokens,
   ]
-  const total = allAssets.reduce((s, a) => s + a.usdValue, 0) || 1
+  const total = wallet.netWorthUsd || 1
+  const chainBreakdown = wallet.chainBreakdown ?? []
 
   const [txList, setTxList] = useState<Transaction[]>(wallet.transactions)
   const [nextCursor, setNextCursor] = useState<string | null>(null)
@@ -264,16 +313,50 @@ export function PortfolioPanel({ wallet, market }: Props) {
 
   return (
     <div style={panel}>
+      {/* Cross-chain total net worth */}
+      <div style={netWorthCard}>
+        <div style={{ fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 6 }}>TOTAL PORTFOLIO VALUE</div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: '#E8E8E0', lineHeight: 1 }}>
+          ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </div>
+        {chainBreakdown.length > 1 && (
+          <div style={{ marginTop: 14 }}>
+            <div style={{ height: 6, borderRadius: 3, display: 'flex', overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
+              {chainBreakdown.map(c => (
+                <div key={c.chain}
+                  style={{ width: `${(c.usdValue / total) * 100}%`, background: chainColor(c.chain), height: '100%', transition: 'width 0.8s ease' }}
+                  title={`${c.chain}: $${c.usdValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`}
+                />
+              ))}
+            </div>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10, marginTop: 8 }}>
+              {chainBreakdown.map(c => (
+                <div key={c.chain} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 7, height: 7, borderRadius: '50%', background: chainColor(c.chain) }} />
+                  <span style={{ color: '#888', fontSize: 10, fontFamily: 'monospace' }}>
+                    {c.chain} · ${c.usdValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({((c.usdValue / total) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Holdings */}
       <div style={sectionTitle}>HOLDINGS</div>
-      {allAssets.map((t) => {
+      {allAssets.map((t, i) => {
         const pct = ((t.usdValue / total) * 100).toFixed(1)
+        const key = `${t.symbol}-${'chain' in t ? t.chain : ''}-${i}`
         return (
-          <div key={t.symbol} style={tokenRow}>
+          <div key={key} style={tokenRow}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
               <div style={{ width: 10, height: 10, borderRadius: '50%', background: tokenColor(t.symbol) }} />
               <div>
-                <div style={symStyle}>{t.symbol}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <span style={symStyle}>{t.symbol}</span>
+                  {'chain' in t && t.chain && <ChainBadge chain={t.chain} />}
+                </div>
                 <div style={nameStyle}>{t.name}</div>
               </div>
             </div>
@@ -294,16 +377,16 @@ export function PortfolioPanel({ wallet, market }: Props) {
       {/* Allocation bar */}
       <div style={sectionTitle}>ALLOCATION</div>
       <div style={allocBar}>
-        {allAssets.map(t => (
-          <div key={t.symbol}
+        {allAssets.map((t, i) => (
+          <div key={`alloc-${i}`}
             style={{ width: `${(t.usdValue / total) * 100}%`, background: tokenColor(t.symbol), height: '100%', transition: 'width 0.8s ease' }}
             title={`${t.symbol} ${((t.usdValue / total) * 100).toFixed(1)}%`}
           />
         ))}
       </div>
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, marginTop: 10 }}>
-        {allAssets.map(t => (
-          <div key={t.symbol} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+        {allAssets.map((t, i) => (
+          <div key={`legend-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokenColor(t.symbol) }} />
             <span style={{ color: '#888', fontSize: 11, fontFamily: 'monospace' }}>{t.symbol}</span>
           </div>
@@ -461,6 +544,12 @@ function Metric({ label, value }: { label: string; value: string }) {
 }
 
 const panel: CSSProperties = { flex: 1, overflowY: 'auto', padding: 24 }
+const netWorthCard: CSSProperties = {
+  background: 'rgba(255,255,255,0.02)',
+  border: '1px solid rgba(255,255,255,0.07)',
+  borderRadius: 10, padding: '18px 20px',
+  marginBottom: 8,
+}
 const sectionTitle: CSSProperties = { fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 14, marginTop: 24 }
 const tokenRow: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',

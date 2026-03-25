@@ -7,6 +7,17 @@ export interface TokenBalance {
   contractAddress?: string
   logo?: string
   change24h?: number
+  chain: string       // e.g. "Ethereum", "Polygon", "BSC"
+  chainId?: number
+}
+
+export interface NativeBalance {
+  chain: string
+  chainId: number
+  symbol: string
+  name: string
+  balance: string
+  balanceUsd: number
 }
 
 export type TransactionActivity = 'swap' | 'send' | 'receive' | 'contract'
@@ -51,6 +62,13 @@ export interface NFT {
   imageUrl?: string
 }
 
+export interface ChainBreakdown {
+  chain: string
+  chainId: number
+  usdValue: number
+  nativeSymbol: string
+}
+
 export interface WalletData {
   address: string
   ensName?: string
@@ -58,6 +76,8 @@ export interface WalletData {
   ethBalanceUsd: number
   netWorthUsd: number
   tokens: TokenBalance[]
+  nativeBalances: NativeBalance[]
+  chainBreakdown: ChainBreakdown[]
   transactions: Transaction[]
   nfts: NFT[]
   riskLevel: 'LOW' | 'MEDIUM' | 'HIGH'
@@ -78,12 +98,27 @@ export interface ChatRequest {
   walletData?: WalletData // cached on frontend
 }
 
-export interface SendTxIntent {
+export interface SendEthIntent {
   type: 'SEND_ETH'
   to: string
-  amount: string // in ETH
+  amount: string   // human-readable ETH (e.g. "0.1")
+  reason: string
+  chainId?: number // defaults to 1 (Ethereum mainnet)
+}
+
+export interface SendTokenIntent {
+  type: 'SEND_TOKEN'
+  to: string           // recipient address
+  amount: string       // human-readable token amount (e.g. "100")
+  tokenSymbol: string  // e.g. "USDC"
+  tokenName: string    // e.g. "USD Coin"
+  tokenAddress: string // ERC-20 contract address
+  decimals: number     // token decimals
+  chainId: number      // EVM chain ID
   reason: string
 }
+
+export type SendTxIntent = SendEthIntent | SendTokenIntent
 
 export interface ChatResponse {
   reply: string
