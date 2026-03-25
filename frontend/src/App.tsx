@@ -50,10 +50,13 @@ export default function App() {
             Connect Wallet →
           </button>
           <div style={pills}>
-            {['Net Worth', 'Risk Analysis', 'Transaction Intel', 'AI Chat', 'Send ETH'].map(f => (
+            {['Cross-chain Balances', 'Risk Analysis', 'Transaction Intel', 'AI Chat', 'Send ETH', 'Send Any ERC-20'].map(f => (
               <span key={f} style={pill}>{f}</span>
             ))}
           </div>
+          <p style={sendHint}>
+            Say <span style={code}>"send 50 USDC to 0x..."</span> or <span style={code}>"send 0.1 ETH to 0x..."</span> — Oracle handles the rest.
+          </p>
         </div>
       </div>
     )
@@ -217,6 +220,15 @@ const pill: React.CSSProperties = {
   padding: '4px 14px', borderRadius: 20,
   border: '1px solid rgba(99,102,241,0.3)',
   color: '#6366F1', fontSize: 11, letterSpacing: 1,
+}
+const sendHint: React.CSSProperties = {
+  marginTop: 20, color: '#555', fontSize: 12,
+  fontFamily: "'IBM Plex Mono', monospace", textAlign: 'center', lineHeight: 1.8,
+}
+const code: React.CSSProperties = {
+  color: '#A78BFA', background: 'rgba(167,139,250,0.08)',
+  border: '1px solid rgba(167,139,250,0.2)',
+  borderRadius: 4, padding: '1px 7px', fontSize: 11,
 }
 const spinnerWrap: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 14 }
 const spinner: React.CSSProperties = {

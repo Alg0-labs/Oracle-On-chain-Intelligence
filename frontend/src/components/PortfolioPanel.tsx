@@ -1,10 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { CSSProperties } from 'react'
-<<<<<<< Updated upstream
-import type { WalletData, Transaction, DecodedTransfer, MarketData } from '../types/index.js'
-=======
 import type { WalletData, Transaction, DecodedTransfer, MarketData, MarketNewsInsight, NativeBalance } from '../types/index.js'
->>>>>>> Stashed changes
 import { fetchTransactions } from '../lib/api.js'
 
 function Sparkline({ positive }: { positive: boolean }) {
