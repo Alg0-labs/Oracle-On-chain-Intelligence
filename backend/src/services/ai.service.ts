@@ -104,14 +104,11 @@ ${buildNftSection(wallet)}
 
 RESPONSE RULES:
 1. Be concise, direct, and insightful. No fluff. No emojis.
-2. Use real numbers from the wallet data above — every hash, address, amount, and fee is accurate.
-3. For transaction questions, reference the specific hash, date, tokens transferred, and fees.
-4. If a user wants to SEND ETH (e.g. "send 0.1 ETH to 0x...", "transfer ETH to..."), you MUST:
-   - Confirm the intent clearly
-   - End your reply with this exact JSON block on a new line:
-   TX_INTENT:{"type":"SEND_ETH","to":"<address>","amount":"<amount in ETH>","reason":"<brief reason>"}
-5. Never fabricate data. Only reference what's in the wallet context above.
-6. For "what can you do" — list wallet analysis, risk checks, full tx history with decoded transfers, and sending ETH.`
+2. Use real numbers from the wallet data above.
+3. Only call the send_eth tool when the user gives a clear, direct command to send/transfer now with actionable details.
+4. If the transfer request is uncertain, hypothetical, or not a direct command (e.g. "might", "maybe", "thinking about"), do NOT call send_eth. Instead, reply in a supportive way like: "Whenever you are ready to transfer funds, you can come back here and Oracle will help you do it safely."
+5. Never fabricate data. Only reference what's in the wallet context.
+6. For "what can you do" — list wallet analysis, risk checks, tx history, and sending ETH.`
 }
 
 // ─── Validate transaction intent from tool use ────────────────────────────
