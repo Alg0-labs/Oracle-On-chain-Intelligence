@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { CSSProperties } from 'react'
-import type { WalletData, Transaction, DecodedTransfer } from '../types/index.js'
+import type { WalletData, Transaction, DecodedTransfer, MarketData } from '../types/index.js'
 import { fetchTransactions } from '../lib/api.js'
 
 function Sparkline({ positive }: { positive: boolean }) {
@@ -228,9 +228,10 @@ function TxRow({ tx, onClick }: { tx: Transaction; onClick: () => void }) {
 
 interface Props {
   wallet: WalletData
+  market: MarketData | null
 }
 
-export function PortfolioPanel({ wallet }: Props) {
+export function PortfolioPanel({ wallet, market }: Props) {
   const allAssets = [
     { symbol: 'ETH', name: 'Ethereum', usdValue: wallet.ethBalanceUsd, balance: wallet.ethBalance, change24h: undefined as number | undefined },
     ...wallet.tokens,
@@ -361,6 +362,77 @@ export function PortfolioPanel({ wallet }: Props) {
       {selectedTx && (
         <TransactionDetailModal tx={selectedTx} onClose={() => setSelectedTx(null)} />
       )}
+      {/* Market Intelligence */}
+      {!market ? (
+        <div style={{ color: '#666', fontSize: 12 }}>Loading market intelligence...</div>
+      ) : (
+        <>
+          <div style={sectionTitle}>FEAR & GREED INDEX</div>
+          <FearGreedGauge value={market.fearGreed.value} label={market.fearGreed.label} />
+          <div style={{ ...sectionTitle, marginTop: 16 }}>LATEST MARKET NEWS (TOP 10)</div>
+          {(market.latestNewsInsights ?? []).slice(0, 10).map((item) => (
+            <NewsInsightCard key={item.id} item={item} />
+          ))}
+        </>
+      )}
+    </div>
+  )
+}
+
+function FearGreedGauge({ value, label }: { value: number; label: string }) {
+  const clamped = Math.max(0, Math.min(100, value))
+  const angle = -120 + (clamped / 100) * 240
+  const radians = (angle * Math.PI) / 180
+  const radius = 46
+  const cx = 62
+  const cy = 62
+  const x = cx + radius * Math.cos(radians)
+  const y = cy + radius * Math.sin(radians)
+
+  return (
+    <div style={gaugeCard}>
+      <div style={{ color: '#C9C9C2', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Crypto Fear and Greed Index</div>
+      <svg width="124" height="86" viewBox="0 0 124 86">
+        <path d="M16 62 A46 46 0 0 1 39 22" stroke="#E55B63" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M39 22 A46 46 0 0 1 62 16" stroke="#DCA84A" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M62 16 A46 46 0 0 1 85 22" stroke="#C2C842" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <path d="M85 22 A46 46 0 0 1 108 62" stroke="#3FC09A" strokeWidth="6" fill="none" strokeLinecap="round" />
+        <line x1={cx} y1={cy} x2={x} y2={y} stroke="#DADAD5" strokeWidth="3" />
+        <circle cx={cx} cy={cy} r="6" fill="#B8B8B0" />
+      </svg>
+      <div style={{ marginTop: -2, textAlign: 'center' }}>
+        <div style={{ color: '#E8E8E0', fontSize: 38, fontWeight: 700, lineHeight: 1 }}>{clamped}</div>
+        <div style={{ color: '#9A9A93', fontSize: 14 }}>{label}</div>
+      </div>
+    </div>
+  )
+}
+
+function NewsInsightCard({ item }: { item: MarketNewsInsight }) {
+  const sentimentColor =
+    item.sentiment === 'bullish'
+      ? '#4ADE80'
+      : item.sentiment === 'bearish'
+        ? '#F87171'
+        : '#A3A3A3'
+
+  return (
+    <div style={newsCard}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+        <div style={{ color: '#E8E8E0', fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>{item.title}</div>
+        <span style={{ ...sentimentBadge, color: sentimentColor, borderColor: `${sentimentColor}55` }}>
+          {item.sentiment.toUpperCase()}
+        </span>
+      </div>
+      <div style={newsSummary}>{item.summary}</div>
+      <div style={insightLine}><span style={insightLabel}>AI reasoning:</span> {item.aiReasoning}</div>
+      <div style={insightLine}><span style={insightLabel}>Fear &amp; Greed link:</span> {item.fearGreedConnection}</div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
+        <span style={{ color: '#555', fontSize: 10 }}>{new Date(item.publishedAt).toLocaleString()}</span>
+        <a href={item.url} target="_blank" rel="noreferrer" style={newsLink}>
+          {item.source} ↗
+        </a>
+      </div>
     </div>
   )
 }
@@ -435,4 +507,49 @@ const modal: CSSProperties = {
 const modalSection: CSSProperties = {
   fontSize: 10, color: '#555', letterSpacing: 2,
   marginBottom: 10, marginTop: 0,
+}
+const newsCard: React.CSSProperties = {
+  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'rgba(255,255,255,0.02)',
+  borderRadius: 8,
+  padding: 12,
+  marginBottom: 10,
+}
+const sentimentBadge: React.CSSProperties = {
+  border: '1px solid',
+  borderRadius: 999,
+  padding: '2px 8px',
+  fontSize: 10,
+  letterSpacing: 0.8,
+  whiteSpace: 'nowrap',
+}
+const newsSummary: React.CSSProperties = {
+  color: '#A0A0A0',
+  fontSize: 12,
+  lineHeight: 1.5,
+  marginTop: 8,
+}
+const insightLine: React.CSSProperties = {
+  color: '#B8B8B0',
+  fontSize: 11,
+  lineHeight: 1.5,
+  marginTop: 8,
+}
+const insightLabel: React.CSSProperties = {
+  color: '#7F7F78',
+}
+const newsLink: React.CSSProperties = {
+  color: '#7C83FF',
+  fontSize: 11,
+  textDecoration: 'none',
+}
+const gaugeCard: React.CSSProperties = {
+  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'rgba(255,255,255,0.02)',
+  borderRadius: 10,
+  padding: 14,
+  marginBottom: 12,
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
 }

@@ -1,5 +1,11 @@
 import Anthropic from '@anthropic-ai/sdk'
-import type { WalletData, ChatMessage, ChatResponse, SendTxIntent } from '../types/index.js'
+import type {
+  WalletData,
+  ChatMessage,
+  ChatResponse,
+  SendTxIntent,
+  MarketContext,
+} from '../types/index.js'
 import dotenv from 'dotenv'
 
 dotenv.config({ override: true })
@@ -79,7 +85,20 @@ function buildNftSection(wallet: WalletData): string {
   ).join('\n')
 }
 
-function buildSystemPrompt(wallet: WalletData): string {
+function buildSystemPrompt(wallet: WalletData, market: MarketContext): string {
+  const ethImpact = market.portfolioImpact[0]
+  const ethImpactLine = ethImpact
+    ? `  • ETH: $${ethImpact.holdingUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })} (${ethImpact.percentOfPortfolio.toFixed(1)}% of portfolio) · ${ethImpact.sentiment.toUpperCase()} · ${ethImpact.priceChange24h >= 0 ? '+' : ''}${ethImpact.priceChange24h.toFixed(2)}% (24h) · ${ethImpact.relatedNewsCount} related news`
+    : '  • ETH impact data unavailable'
+
+  const relevantNewsSummary = market.relevantNews.length > 0
+    ? market.relevantNews
+        .slice(0, 5)
+        .map((news) =>
+          `  • ${news.title} (${news.sentiment}) · ${news.source} · ${news.url}`
+        )
+        .join('\n')
+    : '  (no ETH-specific market headlines right now)'
   return `You are ØRACLE — a sharp, precise on-chain financial AI assistant. You have full real-time access to the user's wallet data fetched this session.
 
 ━━━━━━━━━━━━━━━━ WALLET OVERVIEW ━━━━━━━━━━━━━━━━
@@ -102,13 +121,29 @@ ${buildNftSection(wallet)}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
+MARKET CONTEXT (ETH-focused, live this session):
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Fear & Greed Index: ${market.fearGreed.value}/100 (${market.fearGreed.label})
+Trend: ${market.fearGreed.trend}
+
+ETH Impact:
+${ethImpactLine}
+
+ETH-Relevant News:
+${relevantNewsSummary}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
 RESPONSE RULES:
-1. Be concise, direct, and insightful. No fluff. No emojis.
+1. Be concise, direct, and insightful. No fluff. No emojis. Do not use markdown formatting symbols like **, __, or bullet markdown syntax.
 2. Use real numbers from the wallet data above.
-3. Only call the send_eth tool when the user gives a clear, direct command to send/transfer now with actionable details.
-4. If the transfer request is uncertain, hypothetical, or not a direct command (e.g. "might", "maybe", "thinking about"), do NOT call send_eth. Instead, reply in a supportive way like: "Whenever you are ready to transfer funds, you can come back here and Oracle will help you do it safely."
-5. Never fabricate data. Only reference what's in the wallet context.
-6. For "what can you do" — list wallet analysis, risk checks, tx history, and sending ETH.`
+3. For market sentiment questions, start with Fear & Greed, then explain direct ETH impact on this wallet.
+4. For news questions, prioritize ETH-relevant news first, then mention broader market only if useful.
+4a. Whenever you cite any news item, always include the direct source URL on the same line.
+5. If market news materially affects ETH and ETH is a large wallet exposure (>20%), proactively mention that risk.
+6. Only call the send_eth tool when the user gives a clear, direct command to send/transfer now with actionable details.
+7. If the transfer request is uncertain, hypothetical, or not a direct command (e.g. "might", "maybe", "thinking about"), do NOT call send_eth. Instead, reply in a supportive way like: "Whenever you are ready to transfer funds, you can come back here and Oracle will help you do it safely."
+8. Never fabricate data. Only reference what's in the wallet/market context.
+9. For "what can you do" — list wallet analysis, ETH market context, risk checks, tx history, and sending ETH.`
 }
 
 // ─── Validate transaction intent from tool use ────────────────────────────
@@ -151,9 +186,10 @@ function parseToolTxIntent(content: unknown[]): SendTxIntent | undefined {
 
 export async function chat(
   messages: ChatMessage[],
-  wallet: WalletData
+  wallet: WalletData,
+  market: MarketContext
 ): Promise<ChatResponse> {
-  const systemPrompt = buildSystemPrompt(wallet)
+  const systemPrompt = buildSystemPrompt(wallet, market)
 
   const response = await client.messages.create({
     model: 'claude-sonnet-4-20250514',

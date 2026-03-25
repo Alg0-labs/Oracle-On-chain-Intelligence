@@ -78,3 +78,52 @@ export interface SendTxIntent {
   amount: string
   reason: string
 }
+
+export interface FearGreedData {
+  value: number
+  label: 'Extreme Fear' | 'Fear' | 'Neutral' | 'Greed' | 'Extreme Greed'
+  timestamp: number
+  trend: string
+  history: Array<{ value: number; timestamp: number }>
+}
+
+export interface PortfolioImpact {
+  token: 'ETH'
+  holdingUsd: number
+  percentOfPortfolio: number
+  priceChange24h: number
+  relatedNewsCount: number
+  sentiment: 'bullish' | 'bearish' | 'mixed' | 'neutral'
+}
+
+export interface NewsItem {
+  id: string
+  title: string
+  summary: string
+  url: string
+  source: string
+  publishedAt: number
+  sentiment: 'bullish' | 'bearish' | 'neutral'
+  relatedTokens: string[]
+  importance: 'high' | 'medium' | 'low'
+}
+
+export interface MarketNewsInsight {
+  id: string
+  title: string
+  summary: string
+  sentiment: 'bullish' | 'bearish' | 'neutral'
+  aiReasoning: string
+  fearGreedConnection: string
+  url: string
+  source: string
+  publishedAt: number
+}
+
+export interface MarketData {
+  fearGreed: FearGreedData
+  portfolioImpact: PortfolioImpact[]
+  relevantNews: NewsItem[]
+  latestNewsInsights: MarketNewsInsight[]
+  fetchedAt: number
+}
