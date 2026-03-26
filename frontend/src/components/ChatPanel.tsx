@@ -68,6 +68,7 @@ const PROMPTS = [
   'What did I do recently?',
   'Analyze my risk profile',
   'Send 0.01 ETH to 0x...',
+  'Send 10 USDC to 0x...',
 ]
 
 interface Props {
@@ -175,7 +176,7 @@ export function ChatPanel({ wallet, address }: Props) {
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && send()}
-          placeholder="Ask about your wallet, or say 'send 0.1 ETH to 0x...'"
+          placeholder="Ask anything, or 'send 0.1 ETH / 50 USDC to 0x...'"
           disabled={loading}
         />
         <button
@@ -211,17 +212,20 @@ export function ChatPanel({ wallet, address }: Props) {
 }
 
 function buildWelcome(w: WalletData): string {
-  const tokenLine = w.tokens.length > 0
-    ? `Top token: ${w.tokens[0].symbol} ($${w.tokens[0].usdValue.toLocaleString()})`
+  const topToken = w.tokens.length > 0
+    ? `Top token: ${w.tokens[0].symbol} (${w.tokens[0].chain}) — $${w.tokens[0].usdValue.toLocaleString()}`
     : 'No ERC-20 tokens found.'
+  const chainCount = (w.chainBreakdown ?? []).length
   return `Wallet indexed${w.ensName ? ` · ${w.ensName}` : ''}.
 
-Net Worth:  $${w.netWorthUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })}
+Net Worth:  $${w.netWorthUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })} across ${chainCount} chain${chainCount !== 1 ? 's' : ''}
 ETH:        ${w.ethBalance} ETH ($${w.ethBalanceUsd.toLocaleString(undefined, { maximumFractionDigits: 0 })})
-${tokenLine}
+${topToken}
 Risk Level: ${w.riskLevel} — ${w.riskReason}
 
-Ask me anything about your wallet, or say "send X ETH to 0x..." to initiate a transfer.`
+Ask me anything about your wallet. To send funds say:
+"send 0.1 ETH to 0x..."   — native transfer
+"send 50 USDC to 0x..."   — ERC-20 token transfer`
 }
 
 const pane: React.CSSProperties = {

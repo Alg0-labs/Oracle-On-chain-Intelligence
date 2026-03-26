@@ -6,33 +6,46 @@ import type {
   SendTxIntent,
   MarketContext,
 } from '../types/index.js'
+import { isValidEvmAddress, isPositiveDecimal } from '../utils/tx-builder.js'
 import dotenv from 'dotenv'
 
 dotenv.config({ override: true })
 
-
 const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+
+// ─── Claude tools ─────────────────────────────────────────────────────────────
 
 const SEND_ETH_TOOL = {
   name: 'send_eth',
-  description: 'Execute an ETH transfer to another address',
+  description: 'Transfer native ETH (or the chain native asset) to an address',
   input_schema: {
     type: 'object',
     properties: {
-      to: {
-        type: 'string',
-        description: 'Ethereum address (0x...)',
-      },
-      amount: {
-        type: 'string',
-        description: "Amount in ETH (e.g., '0.1')",
-      },
-      reason: {
-        type: 'string',
-        description: 'Brief explanation of transfer',
-      },
+      to:      { type: 'string', description: 'Recipient address (0x...)' },
+      amount:  { type: 'string', description: "Amount in ETH, e.g. '0.1'" },
+      chainId: { type: 'number', description: 'EVM chain ID (1=Ethereum, 137=Polygon, 56=BSC, 42161=Arbitrum, 10=Optimism, 8453=Base). Default 1.' },
+      reason:  { type: 'string', description: 'Short reason for the transfer' },
     },
     required: ['to', 'amount'],
+  },
+} as const
+
+const SEND_TOKEN_TOOL = {
+  name: 'send_token',
+  description: 'Transfer an ERC-20 token to an address. Only call this when the user explicitly confirms they want to send a specific token they hold.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      to:           { type: 'string', description: 'Recipient address (0x...)' },
+      amount:       { type: 'string', description: "Human-readable token amount, e.g. '100' for 100 USDC" },
+      tokenSymbol:  { type: 'string', description: 'Token symbol, e.g. USDC' },
+      tokenName:    { type: 'string', description: 'Full token name, e.g. USD Coin' },
+      tokenAddress: { type: 'string', description: 'ERC-20 contract address (0x...)' },
+      decimals:     { type: 'number', description: 'Token decimals, e.g. 6 for USDC, 18 for WETH' },
+      chainId:      { type: 'number', description: 'EVM chain ID where the token lives (1=Ethereum, 137=Polygon, 56=BSC, 42161=Arbitrum, 10=Optimism, 8453=Base)' },
+      reason:       { type: 'string', description: 'Short reason for the transfer' },
+    },
+    required: ['to', 'amount', 'tokenSymbol', 'tokenName', 'tokenAddress', 'decimals', 'chainId'],
   },
 } as const
 
@@ -49,7 +62,8 @@ function buildTokenSection(wallet: WalletData): string {
       ? ` | 24h: ${t.change24h >= 0 ? '+' : ''}${t.change24h.toFixed(2)}%`
       : ''
     const contract = t.contractAddress ? ` | contract: ${t.contractAddress}` : ''
-    return `  • ${t.symbol} (${t.name}): balance=${t.balance} | value=${fmtUsd(t.usdValue)}${change}${contract}`
+    const chain = t.chain ? ` | chain: ${t.chain}` : ''
+    return `  • ${t.symbol} (${t.name}): balance=${t.balance} | value=${fmtUsd(t.usdValue)}${change}${contract}${chain}`
   }).join('\n')
 }
 
@@ -103,12 +117,17 @@ function buildSystemPrompt(wallet: WalletData, market: MarketContext): string {
 
 ━━━━━━━━━━━━━━━━ WALLET OVERVIEW ━━━━━━━━━━━━━━━━
 Address:           ${wallet.address}${wallet.ensName ? ` (${wallet.ensName})` : ''}
-Network:           ${wallet.chain}
 ETH Balance:       ${wallet.ethBalance} ETH (${fmtUsd(wallet.ethBalanceUsd)})
-Total Net Worth:   ${fmtUsd(wallet.netWorthUsd)}
+Total Net Worth:   ${fmtUsd(wallet.netWorthUsd)} (all EVM chains)
 Risk Level:        ${wallet.riskLevel} — ${wallet.riskReason}
 Stablecoin Alloc:  ${wallet.stablecoinPct.toFixed(2)}%
 Top Holding:       ${wallet.topHoldingPct.toFixed(2)}% of portfolio
+
+━━━━━━━━━━━━━━━━ CHAIN BREAKDOWN ━━━━━━━━━━━━━━━━
+${(wallet.chainBreakdown ?? []).map(c => `  • ${c.chain}: ${fmtUsd(c.usdValue)} (${((c.usdValue / wallet.netWorthUsd) * 100).toFixed(1)}%)`).join('\n') || '  (single-chain)'}
+
+━━━━━━━━━━━━━━━━ NATIVE BALANCES ━━━━━━━━━━━━━━━━
+${(wallet.nativeBalances ?? []).filter(n => parseFloat(n.balance) > 0).map(n => `  • ${n.chain}: ${n.balance} ${n.symbol} (${fmtUsd(n.balanceUsd)})`).join('\n') || '  (none)'}
 
 ━━━━━━━━━━━━━━━━ TOKEN HOLDINGS (${wallet.tokens.length}) ━━━━━━━━━━━━━━━━
 ${buildTokenSection(wallet)}
@@ -140,45 +159,61 @@ RESPONSE RULES:
 4. For news questions, prioritize ETH-relevant news first, then mention broader market only if useful.
 4a. Whenever you cite any news item, always include the direct source URL on the same line.
 5. If market news materially affects ETH and ETH is a large wallet exposure (>20%), proactively mention that risk.
-6. Only call the send_eth tool when the user gives a clear, direct command to send/transfer now with actionable details.
-7. If the transfer request is uncertain, hypothetical, or not a direct command (e.g. "might", "maybe", "thinking about"), do NOT call send_eth. Instead, reply in a supportive way like: "Whenever you are ready to transfer funds, you can come back here and Oracle will help you do it safely."
-8. Never fabricate data. Only reference what's in the wallet/market context.
-9. For "what can you do" — list wallet analysis, ETH market context, risk checks, tx history, and sending ETH.`
+6. Only call send_eth or send_token when the user gives a clear, direct command to send/transfer now with all required details (recipient, amount, token if applicable).
+7. For token sends: always use the exact tokenAddress and decimals from the TOKEN HOLDINGS section above. Never guess a contract address.
+8. If the transfer request is uncertain, hypothetical, or missing info (e.g. "might", "maybe", "thinking about sending"), do NOT call send_eth/send_token. Instead reply: "Whenever you are ready to transfer funds, come back and I will help you do it safely."
+9. Never fabricate data. Only reference what's in the wallet/market context.
+10. For "what can you do" — list: wallet analysis, cross-chain balances, risk checks, tx history, send ETH, send any ERC-20 token.`
 }
 
-// ─── Validate transaction intent from tool use ────────────────────────────
-
-function isValidEthAddress(address: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(address.trim())
-}
-
-function isValidEthAmount(amount: string): boolean {
-  const trimmed = amount.trim()
-  if (!/^\d+(\.\d+)?$/.test(trimmed)) return false
-  const numeric = Number(trimmed)
-  return Number.isFinite(numeric) && numeric > 0
-}
+// ─── Parse transaction intent from tool use ───────────────────────────────────
 
 function parseToolTxIntent(content: unknown[]): SendTxIntent | undefined {
   const toolUse = content.find(
-    (block: any) => block?.type === 'tool_use' && block?.name === 'send_eth'
+    (block: any) =>
+      block?.type === 'tool_use' &&
+      (block?.name === 'send_eth' || block?.name === 'send_token')
   ) as any
+
   if (!toolUse?.input || typeof toolUse.input !== 'object') return undefined
-
   const input = toolUse.input as Record<string, unknown>
-  const to = typeof input.to === 'string' ? input.to.trim() : ''
-  const amount = typeof input.amount === 'string' ? input.amount.trim() : ''
-  const reasonRaw = typeof input.reason === 'string' ? input.reason.trim() : ''
 
-  if (!isValidEthAddress(to) || !isValidEthAmount(amount)) {
-    return undefined
+  const to     = typeof input.to     === 'string' ? input.to.trim()     : ''
+  const amount = typeof input.amount === 'string' ? input.amount.trim() : ''
+  const reason = typeof input.reason === 'string' ? input.reason.trim() : ''
+
+  if (!isValidEvmAddress(to) || !isPositiveDecimal(amount)) return undefined
+
+  if (toolUse.name === 'send_token') {
+    const tokenAddress = typeof input.tokenAddress === 'string' ? input.tokenAddress.trim() : ''
+    const tokenSymbol  = typeof input.tokenSymbol  === 'string' ? input.tokenSymbol.trim()  : '?'
+    const tokenName    = typeof input.tokenName    === 'string' ? input.tokenName.trim()    : tokenSymbol
+    const decimals     = typeof input.decimals     === 'number' ? input.decimals             : 18
+    const chainId      = typeof input.chainId      === 'number' ? input.chainId              : 1
+
+    if (!isValidEvmAddress(tokenAddress)) return undefined
+
+    return {
+      type: 'SEND_TOKEN',
+      to,
+      amount,
+      tokenSymbol,
+      tokenName,
+      tokenAddress,
+      decimals,
+      chainId,
+      reason: reason || `Send ${tokenSymbol} transfer`,
+    }
   }
 
+  // send_eth
+  const chainId = typeof input.chainId === 'number' ? input.chainId : 1
   return {
     type: 'SEND_ETH',
     to,
     amount,
-    reason: reasonRaw || 'User requested ETH transfer',
+    chainId,
+    reason: reason || 'User requested ETH transfer',
   }
 }
 
@@ -196,7 +231,7 @@ export async function chat(
     max_tokens: 2048,
     system: systemPrompt,
     messages: messages.map(m => ({ role: m.role, content: m.content })),
-    tools: [SEND_ETH_TOOL],
+    tools: [SEND_ETH_TOOL, SEND_TOKEN_TOOL],
   })
 
   const content = response.content as Array<{ type: string; text?: string; [key: string]: unknown }>
@@ -208,7 +243,9 @@ export async function chat(
 
   const txIntent = parseToolTxIntent(content as unknown[])
   const fallbackReply = txIntent
-    ? `I can prepare this transfer: send ${txIntent.amount} ETH to ${txIntent.to}. Please confirm before execution.`
+    ? txIntent.type === 'SEND_TOKEN'
+      ? `Ready to send ${txIntent.amount} ${txIntent.tokenSymbol} to ${txIntent.to}. Please confirm.`
+      : `Ready to send ${txIntent.amount} ETH to ${txIntent.to}. Please confirm.`
     : ''
 
   return {
