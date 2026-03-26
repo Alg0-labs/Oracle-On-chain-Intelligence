@@ -13,7 +13,7 @@ export function Marquee() {
       overflow: 'hidden',
       borderTop: '1px solid var(--border)',
       borderBottom: '1px solid var(--border)',
-      background: 'var(--bg2)',
+      background: 'rgba(12,15,26,0.6)',
       padding: '16px 0',
       position: 'relative', zIndex: 1,
     }}>

@@ -153,7 +153,7 @@ export function ChatPanel({ wallet, address }: Props) {
                 <span key={i} style={{ ...dot, animationDelay: `${i * 0.2}s` }} />
               ))}
             </div>
-            <span style={{ color: 'var(--c-text-6)', fontSize: 11, fontFamily: 'monospace' }}>analyzing chain data...</span>
+            <span style={{ color: '#555', fontSize: 11, fontFamily: 'monospace' }}>analyzing chain data...</span>
           </div>
         )}
         <div ref={bottomRef} />
@@ -237,8 +237,8 @@ const userBubble: React.CSSProperties = {
   padding: '12px 16px', maxWidth: '75%',
 }
 const aiBubble: React.CSSProperties = {
-  background: 'var(--c-surface-2)',
-  border: '1px solid var(--c-border-4)',
+  background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.07)',
   borderRadius: '8px 8px 8px 2px',
   padding: '14px 16px', maxWidth: '85%',
 }
@@ -247,7 +247,7 @@ const aiLabel: React.CSSProperties = {
   display: 'block', marginBottom: 8,
 }
 const msgText: React.CSSProperties = {
-  margin: 0, fontSize: 13, lineHeight: 1.7, color: 'var(--c-text-2)',
+  margin: 0, fontSize: 13, lineHeight: 1.7, color: '#D0D0C8',
   whiteSpace: 'pre-wrap', fontFamily: "'IBM Plex Mono', monospace",
 }
 const msgLink: React.CSSProperties = {
@@ -255,7 +255,7 @@ const msgLink: React.CSSProperties = {
   textDecoration: 'underline',
 }
 const sectionHeader: React.CSSProperties = {
-  color: 'var(--c-text)',
+  color: '#E5E5DD',
   fontSize: 12,
   letterSpacing: 0.4,
   marginTop: 6,
@@ -276,7 +276,7 @@ const bulletDot: React.CSSProperties = {
 const paragraphRow: React.CSSProperties = {
   marginBottom: 8,
 }
-const ts: React.CSSProperties = { fontSize: 10, color: 'var(--c-text-8)', marginTop: 4 }
+const ts: React.CSSProperties = { fontSize: 10, color: '#333', marginTop: 4 }
 const dot: React.CSSProperties = {
   width: 6, height: 6, borderRadius: '50%', background: '#6366F1',
   display: 'inline-block', animation: 'pulse 1.2s ease-in-out infinite',
@@ -285,21 +285,21 @@ const promptsRow: React.CSSProperties = {
   display: 'flex', flexWrap: 'wrap', gap: 8, padding: '12px 20px',
 }
 const chip: React.CSSProperties = {
-  padding: '6px 14px', background: 'var(--c-surface-2)',
-  border: '1px solid var(--c-border-5)', borderRadius: 20,
-  color: 'var(--c-text-5)', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace",
+  padding: '6px 14px', background: 'rgba(255,255,255,0.03)',
+  border: '1px solid rgba(255,255,255,0.08)', borderRadius: 20,
+  color: '#888', fontSize: 11, fontFamily: "'IBM Plex Mono', monospace",
   cursor: 'pointer', transition: 'all 0.15s',
 }
 const inputRow: React.CSSProperties = {
   display: 'flex', gap: 10, padding: '16px 20px',
-  borderTop: '1px solid var(--c-border-2)',
-  background: 'var(--c-input-bar)',
+  borderTop: '1px solid rgba(255,255,255,0.05)',
+  background: 'rgba(8,10,15,0.95)',
 }
 const inputStyle: React.CSSProperties = {
-  flex: 1, background: 'var(--c-surface-3)',
-  border: '1px solid var(--c-border-5)',
+  flex: 1, background: 'rgba(255,255,255,0.04)',
+  border: '1px solid rgba(255,255,255,0.08)',
   borderRadius: 6, padding: '12px 16px',
-  color: 'var(--c-text)', fontSize: 13,
+  color: '#E8E8E0', fontSize: 13,
   fontFamily: "'IBM Plex Mono', monospace", outline: 'none',
 }
 const sendBtn: React.CSSProperties = {

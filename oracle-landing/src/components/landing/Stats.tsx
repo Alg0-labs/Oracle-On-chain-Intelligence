@@ -90,7 +90,7 @@ export function RiskSection() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--muted)', marginBottom: 7, letterSpacing: 1 }}>
                   <span>{b.label}</span><span>{b.pct}%</span>
                 </div>
-                <div style={{ height: 7, borderRadius: 4, background: 'var(--border)', overflow: 'hidden' }}>
+                <div style={{ height: 7, borderRadius: 4, background: 'rgba(255,255,255,0.05)', overflow: 'hidden' }}>
                   <div style={{ width: `${b.pct}%`, height: '100%', background: b.color, borderRadius: 4, transition: 'width 1s ease' }} />
                 </div>
               </div>
