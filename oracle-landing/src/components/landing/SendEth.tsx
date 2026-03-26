@@ -66,7 +66,7 @@ function TxModal() {
         <div key={r.label} style={{
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
           padding: '13px 0',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid var(--border)',
         }}>
           <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: 1 }}>{r.label}</span>
           <span style={{ fontSize: 13, color: r.color, fontFamily: 'var(--font-mono)' }}>{r.value}</span>
@@ -93,8 +93,8 @@ const h2Style: React.CSSProperties = {
 }
 const cancelBtn: React.CSSProperties = {
   flex: 1, padding: 13,
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'var(--bubble-ai-bg)',
+  border: '1px solid var(--bubble-ai-border)',
   borderRadius: 6, color: 'var(--muted)',
   fontFamily: 'var(--font-mono)', fontSize: 12, cursor: 'none',
 }

@@ -1,5 +1,71 @@
 @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;700;800&display=swap');
 
+/* ── Dark theme (default) ───────────────────────────────────────────────────── */
+:root {
+  --c-bg:        #080A0F;
+  --c-bg-alt:    rgba(255,255,255,0.015);
+  --c-surface:   rgba(255,255,255,0.02);
+  --c-surface-2: rgba(255,255,255,0.03);
+  --c-surface-3: rgba(255,255,255,0.04);
+  --c-surface-4: rgba(255,255,255,0.05);
+  --c-border:    rgba(255,255,255,0.04);
+  --c-border-2:  rgba(255,255,255,0.05);
+  --c-border-3:  rgba(255,255,255,0.06);
+  --c-border-4:  rgba(255,255,255,0.07);
+  --c-border-5:  rgba(255,255,255,0.08);
+  --c-border-6:  rgba(255,255,255,0.1);
+  --c-header:    rgba(8,10,15,0.95);
+  --c-input-bar: rgba(8,10,15,0.95);
+  --c-modal:     #111111;
+  --c-modal-2:   #0E1018;
+  --c-overlay:   rgba(0,0,0,0.72);
+  --c-text:      #E8E8E0;
+  --c-text-2:    #D0D0C8;
+  --c-text-3:    #C0C0B8;
+  --c-text-4:    #A0A0A0;
+  --c-text-5:    #888888;
+  --c-text-6:    #555555;
+  --c-text-7:    #444444;
+  --c-text-8:    #333333;
+  --c-text-9:    #3a3a3a;
+  --c-grid:      rgba(255,255,255,0.015);
+  --c-noise-opacity: 0.4;
+  --c-glow-opacity:  1;
+}
+
+/* ── Light theme ────────────────────────────────────────────────────────────── */
+[data-theme="light"] {
+  --c-bg:        #F2F1EC;
+  --c-bg-alt:    rgba(0,0,0,0.015);
+  --c-surface:   rgba(0,0,0,0.025);
+  --c-surface-2: rgba(0,0,0,0.035);
+  --c-surface-3: rgba(0,0,0,0.045);
+  --c-surface-4: rgba(0,0,0,0.06);
+  --c-border:    rgba(0,0,0,0.06);
+  --c-border-2:  rgba(0,0,0,0.07);
+  --c-border-3:  rgba(0,0,0,0.085);
+  --c-border-4:  rgba(0,0,0,0.09);
+  --c-border-5:  rgba(0,0,0,0.1);
+  --c-border-6:  rgba(0,0,0,0.13);
+  --c-header:    rgba(242,241,236,0.95);
+  --c-input-bar: rgba(242,241,236,0.95);
+  --c-modal:     #EDECE7;
+  --c-modal-2:   #F5F4EF;
+  --c-overlay:   rgba(0,0,0,0.45);
+  --c-text:      #1C1C24;
+  --c-text-2:    #2A2A34;
+  --c-text-3:    #3C3C48;
+  --c-text-4:    #5C5C6A;
+  --c-text-5:    #78787E;
+  --c-text-6:    #8E8E94;
+  --c-text-7:    #A2A2A8;
+  --c-text-8:    #B4B4BA;
+  --c-text-9:    #AEAEB4;
+  --c-grid:      rgba(0,0,0,0.04);
+  --c-noise-opacity: 0.25;
+  --c-glow-opacity:  0.55;
+}
+
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
@@ -12,10 +78,11 @@ html, body, #root {
 }
 
 body {
-  background: #080A0F;
-  color: #E8E8E0;
+  background: var(--c-bg);
+  color: var(--c-text);
   font-family: 'IBM Plex Mono', 'Courier New', monospace;
   -webkit-font-smoothing: antialiased;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 @keyframes spin {

@@ -1,6 +1,7 @@
 import React from 'react'
 import { useEffect, useState } from 'react'
 import styles from './Navbar.module.css'
+import { useTheme } from '../../lib/theme'
 
 const links = [
   { label: 'Features', href: '#features' },
@@ -11,6 +12,7 @@ const links = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { theme, toggle } = useTheme()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -49,6 +51,13 @@ export function Navbar() {
         </button>
 
         <div className={styles.ctaWrap}>
+          <button
+            onClick={toggle}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={themeToggleBtn}
+          >
+            {theme === 'dark' ? '☀' : '☽'}
+          </button>
           <a href="https://app.oracleprotocol.online" style={primaryBtn}>Launch App →</a>
         </div>
       </nav>
@@ -60,6 +69,12 @@ export function Navbar() {
               {l.label}
             </a>
           ))}
+          <button
+            onClick={() => { toggle(); closeMenu() }}
+            style={{ ...themeToggleBtn, width: '100%', height: 44, borderRadius: 6, fontSize: 14 }}
+          >
+            {theme === 'dark' ? '☀  Switch to light mode' : '☽  Switch to dark mode'}
+          </button>
           <a
             href="https://app.oracleprotocol.online"
             className={styles.mobileCta}
@@ -71,6 +86,19 @@ export function Navbar() {
       )}
     </>
   )
+}
+
+const themeToggleBtn: React.CSSProperties = {
+  background: 'rgba(124,109,250,0.08)',
+  border: '1px solid var(--border)',
+  borderRadius: 6,
+  width: 34, height: 34,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  cursor: 'none',
+  fontSize: 15,
+  color: 'var(--muted)',
+  transition: 'all 0.2s',
+  flexShrink: 0,
 }
 
 const primaryBtn: React.CSSProperties = {
