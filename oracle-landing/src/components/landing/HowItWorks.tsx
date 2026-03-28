@@ -113,9 +113,9 @@ function ChatDemo() {
               padding: '11px 15px',
               fontSize: 12, lineHeight: 1.75,
               borderRadius: m.role === 'user' ? '8px 2px 8px 8px' : '2px 8px 8px 8px',
-              background: m.role === 'user' ? 'rgba(124,109,250,0.14)' : 'rgba(255,255,255,0.04)',
-              border: m.role === 'user' ? '1px solid rgba(124,109,250,0.25)' : '1px solid rgba(255,255,255,0.07)',
-              color: m.role === 'user' ? 'var(--text)' : '#C8C6E0',
+              background: m.role === 'user' ? 'rgba(124,109,250,0.14)' : 'var(--bubble-ai-bg)',
+              border: m.role === 'user' ? '1px solid rgba(124,109,250,0.25)' : '1px solid var(--bubble-ai-border)',
+              color: m.role === 'user' ? 'var(--text)' : 'var(--text)',
               whiteSpace: 'pre-wrap',
               fontFamily: 'var(--font-mono)',
             }}>
@@ -129,12 +129,12 @@ function ChatDemo() {
       <div style={{
         display: 'flex', gap: 10, padding: '14px 20px',
         borderTop: '1px solid var(--border)',
-        background: 'rgba(0,0,0,0.2)',
+        background: 'var(--bubble-ai-bg)',
       }}>
         <div style={{
           flex: 1,
-          background: 'rgba(255,255,255,0.04)',
-          border: '1px solid rgba(255,255,255,0.07)',
+          background: 'var(--bubble-input-bg)',
+          border: '1px solid var(--bubble-input-border)',
           borderRadius: 6, padding: '9px 14px',
           fontSize: 12, color: 'var(--muted)',
         }}>Ask about your wallet...</div>

@@ -62,7 +62,7 @@ function activityBadgeStyle(type: string): CSSProperties {
     swap:     { fg: '#A78BFA', bg: 'rgba(167,139,250,0.12)' },
     send:     { fg: '#FBBF24', bg: 'rgba(251,191,36,0.1)' },
     receive:  { fg: '#4ADE80', bg: 'rgba(74,222,128,0.1)' },
-    contract: { fg: '#888',    bg: 'rgba(255,255,255,0.04)' },
+    contract: { fg: 'var(--c-text-5)', bg: 'var(--c-surface-3)' },
   }
   const c = colors[type] ?? colors.contract
   return {
@@ -81,7 +81,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={() => { navigator.clipboard.writeText(text); setCopied(true); setTimeout(() => setCopied(false), 1500) }}
-      style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#4ADE80' : '#555', fontSize: 10, padding: '0 4px' }}
+      style={{ background: 'none', border: 'none', cursor: 'pointer', color: copied ? '#4ADE80' : 'var(--c-text-6)', fontSize: 10, padding: '0 4px' }}
     >
       {copied ? '✓' : '⎘'}
     </button>
@@ -92,10 +92,10 @@ function DetailRow({ label, value, mono = false, children }: {
   label: string; value?: string; mono?: boolean; children?: React.ReactNode
 }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-      <span style={{ color: '#555', fontSize: 11, letterSpacing: 1, minWidth: 100, flexShrink: 0 }}>{label}</span>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', padding: '8px 0', borderBottom: '1px solid var(--c-border)' }}>
+      <span style={{ color: 'var(--c-text-6)', fontSize: 11, letterSpacing: 1, minWidth: 100, flexShrink: 0 }}>{label}</span>
       {children ?? (
-        <span style={{ color: '#C0C0B8', fontSize: 12, fontFamily: mono ? 'monospace' : 'inherit', wordBreak: 'break-all', textAlign: 'right' }}>
+        <span style={{ color: 'var(--c-text-3)', fontSize: 12, fontFamily: mono ? 'monospace' : 'inherit', wordBreak: 'break-all', textAlign: 'right' }}>
           {value}
         </span>
       )}
@@ -117,14 +117,14 @@ function TransactionDetailModal({ tx, onClose }: { tx: Transaction; onClose: () 
               ● {tx.status.toUpperCase()}
             </span>
           </div>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#555', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'var(--c-text-6)', cursor: 'pointer', fontSize: 18, lineHeight: 1 }}>×</button>
         </div>
 
         {/* Hash */}
-        <div style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 6, padding: '10px 14px', marginBottom: 16 }}>
-          <div style={{ color: '#555', fontSize: 10, letterSpacing: 1, marginBottom: 4 }}>TRANSACTION HASH</div>
+        <div style={{ background: 'var(--c-surface-2)', borderRadius: 6, padding: '10px 14px', marginBottom: 16 }}>
+          <div style={{ color: 'var(--c-text-6)', fontSize: 10, letterSpacing: 1, marginBottom: 4 }}>TRANSACTION HASH</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-            <span style={{ color: '#A0A0A0', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.hash}</span>
+            <span style={{ color: 'var(--c-text-4)', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.hash}</span>
             <div style={{ display: 'flex', gap: 4, flexShrink: 0 }}>
               <CopyButton text={tx.hash} />
               <a href={`https://etherscan.io/tx/${tx.hash}`} target="_blank" rel="noreferrer"
@@ -150,14 +150,14 @@ function TransactionDetailModal({ tx, onClose }: { tx: Transaction; onClose: () 
             <div style={{ display: 'flex', gap: 20 }}>
               {tx.feeNativeEth != null && (
                 <div>
-                  <div style={{ fontSize: 10, color: '#555', letterSpacing: 1 }}>ETH</div>
-                  <div style={{ fontSize: 16, color: '#E8E8E0', fontWeight: 700, marginTop: 2 }}>{tx.feeNativeEth.toFixed(6)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 1 }}>ETH</div>
+                  <div style={{ fontSize: 16, color: 'var(--c-text)', fontWeight: 700, marginTop: 2 }}>{tx.feeNativeEth.toFixed(6)}</div>
                 </div>
               )}
               {tx.feeUsd != null && (
                 <div>
-                  <div style={{ fontSize: 10, color: '#555', letterSpacing: 1 }}>USD</div>
-                  <div style={{ fontSize: 16, color: '#E8E8E0', fontWeight: 700, marginTop: 2 }}>${tx.feeUsd.toFixed(2)}</div>
+                  <div style={{ fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 1 }}>USD</div>
+                  <div style={{ fontSize: 16, color: 'var(--c-text)', fontWeight: 700, marginTop: 2 }}>${tx.feeUsd.toFixed(2)}</div>
                 </div>
               )}
             </div>
@@ -169,13 +169,13 @@ function TransactionDetailModal({ tx, onClose }: { tx: Transaction; onClose: () 
         <DetailRow label="DATE" value={`${date.toLocaleDateString()} ${date.toLocaleTimeString()}`} />
         <DetailRow label="FROM">
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ color: '#C0C0B8', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.from}</span>
+            <span style={{ color: 'var(--c-text-3)', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.from}</span>
             <CopyButton text={tx.from} />
           </div>
         </DetailRow>
         <DetailRow label="TO">
           <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-            <span style={{ color: '#C0C0B8', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.to}</span>
+            <span style={{ color: 'var(--c-text-3)', fontSize: 11, fontFamily: 'monospace', wordBreak: 'break-all' }}>{tx.to}</span>
             <CopyButton text={tx.to} />
           </div>
         </DetailRow>
@@ -204,17 +204,17 @@ function TransferRow({ t }: { t: DecodedTransfer }) {
       <div style={{ flex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {t.logo && <img src={t.logo} alt={t.symbol} style={{ width: 16, height: 16, borderRadius: '50%' }} onError={e => (e.currentTarget.style.display = 'none')} />}
-          <span style={{ color: '#E8E8E0', fontSize: 13, fontWeight: 700 }}>{t.amountFormatted}</span>
+          <span style={{ color: 'var(--c-text)', fontSize: 13, fontWeight: 700 }}>{t.amountFormatted}</span>
           <span style={{ color: '#6366F1', fontSize: 13, fontWeight: 700 }}>{t.symbol}</span>
         </div>
-        <div style={{ color: '#555', fontSize: 10, marginTop: 2 }}>{t.name}</div>
+        <div style={{ color: 'var(--c-text-6)', fontSize: 10, marginTop: 2 }}>{t.name}</div>
       </div>
       <div style={{ textAlign: 'right' }}>
         <div style={{ color: t.direction === 'out' ? '#FBBF24' : '#4ADE80', fontSize: 10, fontWeight: 600 }}>
           {t.direction === 'out' ? 'SENT' : 'RECEIVED'}
         </div>
         <a href={`https://etherscan.io/token/${t.tokenAddress}`} target="_blank" rel="noreferrer"
-          style={{ color: '#444', fontSize: 9, textDecoration: 'none' }}>view token ↗</a>
+          style={{ color: 'var(--c-text-7)', fontSize: 9, textDecoration: 'none' }}>view token ↗</a>
       </div>
     </div>
   )
@@ -225,32 +225,32 @@ function TransferRow({ t }: { t: DecodedTransfer }) {
 function TxRow({ tx, onClick }: { tx: Transaction; onClick: () => void }) {
   return (
     <div onClick={onClick} style={{ ...actRow, cursor: 'pointer' }}
-      onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.02)')}
+      onMouseEnter={e => (e.currentTarget.style.background = 'var(--c-surface)')}
       onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
     >
       <span style={{ color: tx.status === 'success' ? '#6366F1' : '#F87171', fontSize: 8, flexShrink: 0 }}>◆</span>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
           <span style={activityBadgeStyle(tx.activityType)}>{tx.activityType.toUpperCase()}</span>
-          <span style={{ color: '#C0C0B8', fontSize: 12 }}>{tx.description}</span>
+          <span style={{ color: 'var(--c-text-3)', fontSize: 12 }}>{tx.description}</span>
         </div>
         {tx.transfers.length > 0 && (
-          <div style={{ color: '#555', fontSize: 10, marginTop: 5, lineHeight: 1.6 }}>
+          <div style={{ color: 'var(--c-text-6)', fontSize: 10, marginTop: 5, lineHeight: 1.6 }}>
             {tx.transfers.map((t, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                 {t.logo && <img src={t.logo} alt={t.symbol} style={{ width: 10, height: 10, borderRadius: '50%' }} onError={e => (e.currentTarget.style.display = 'none')} />}
                 <span style={{ color: t.direction === 'out' ? '#FBBF24' : '#4ADE80' }}>{t.direction === 'out' ? '↑' : '↓'}</span>
                 <span>{t.amountFormatted} {t.symbol}</span>
-                <span style={{ color: '#3a3a3a' }}>· {t.name}</span>
+                <span style={{ color: 'var(--c-text-9)' }}>· {t.name}</span>
               </div>
             ))}
           </div>
         )}
-        <div style={{ color: '#3a3a3a', fontSize: 10, marginTop: 4 }}>
+        <div style={{ color: 'var(--c-text-9)', fontSize: 10, marginTop: 4 }}>
           {new Date(tx.timestamp).toLocaleDateString()} · {tx.hash.slice(0, 10)}…
         </div>
       </div>
-      <span style={{ color: '#444', fontSize: 10, flexShrink: 0 }}>›</span>
+      <span style={{ color: 'var(--c-text-7)', fontSize: 10, flexShrink: 0 }}>›</span>
     </div>
   )
 }
@@ -311,13 +311,13 @@ export function PortfolioPanel({ wallet, market }: Props) {
     <div style={panel}>
       {/* Cross-chain total net worth */}
       <div style={netWorthCard}>
-        <div style={{ fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 6 }}>TOTAL PORTFOLIO VALUE</div>
-        <div style={{ fontSize: 32, fontWeight: 700, color: '#E8E8E0', lineHeight: 1 }}>
+        <div style={{ fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 2, marginBottom: 6 }}>TOTAL PORTFOLIO VALUE</div>
+        <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--c-text)', lineHeight: 1 }}>
           ${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
         </div>
         {chainBreakdown.length > 1 && (
           <div style={{ marginTop: 14 }}>
-            <div style={{ height: 6, borderRadius: 3, display: 'flex', overflow: 'hidden', background: 'rgba(255,255,255,0.05)' }}>
+            <div style={{ height: 6, borderRadius: 3, display: 'flex', overflow: 'hidden', background: 'var(--c-surface-4)' }}>
               {chainBreakdown.map(c => (
                 <div key={c.chain}
                   style={{ width: `${(c.usdValue / total) * 100}%`, background: chainColor(c.chain), height: '100%', transition: 'width 0.8s ease' }}
@@ -329,7 +329,7 @@ export function PortfolioPanel({ wallet, market }: Props) {
               {chainBreakdown.map(c => (
                 <div key={c.chain} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
                   <div style={{ width: 7, height: 7, borderRadius: '50%', background: chainColor(c.chain) }} />
-                  <span style={{ color: '#888', fontSize: 10, fontFamily: 'monospace' }}>
+                  <span style={{ color: 'var(--c-text-5)', fontSize: 10, fontFamily: 'monospace' }}>
                     {c.chain} · ${c.usdValue.toLocaleString(undefined, { maximumFractionDigits: 0 })} ({((c.usdValue / total) * 100).toFixed(1)}%)
                   </span>
                 </div>
@@ -384,7 +384,7 @@ export function PortfolioPanel({ wallet, market }: Props) {
         {allAssets.map((t, i) => (
           <div key={`legend-${i}`} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
             <div style={{ width: 8, height: 8, borderRadius: '50%', background: tokenColor(t.symbol) }} />
-            <span style={{ color: '#888', fontSize: 11, fontFamily: 'monospace' }}>{t.symbol}</span>
+            <span style={{ color: 'var(--c-text-5)', fontSize: 11, fontFamily: 'monospace' }}>{t.symbol}</span>
           </div>
         ))}
       </div>
@@ -393,10 +393,10 @@ export function PortfolioPanel({ wallet, market }: Props) {
       <div style={sectionTitle}>RISK ANALYSIS</div>
       <div style={riskBox}>
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-          <span style={{ color: '#888', fontSize: 11 }}>RISK LEVEL</span>
+          <span style={{ color: 'var(--c-text-5)', fontSize: 11 }}>RISK LEVEL</span>
           <RiskBadge level={wallet.riskLevel} />
         </div>
-        <p style={{ color: '#A0A0A0', fontSize: 12, margin: 0, lineHeight: 1.7 }}>{wallet.riskReason}</p>
+        <p style={{ color: 'var(--c-text-4)', fontSize: 12, margin: 0, lineHeight: 1.7 }}>{wallet.riskReason}</p>
         <div style={{ marginTop: 12, display: 'flex', gap: 20 }}>
           <Metric label="Stablecoin" value={`${wallet.stablecoinPct.toFixed(1)}%`} />
           <Metric label="Top Holding" value={`${wallet.topHoldingPct.toFixed(1)}%`} />
@@ -407,14 +407,14 @@ export function PortfolioPanel({ wallet, market }: Props) {
       {wallet.nfts.length > 0 && (
         <>
           <div style={sectionTitle}>NFTs</div>
-          <div style={{ color: '#888', fontSize: 12 }}>{wallet.nfts.length} NFTs held</div>
+          <div style={{ color: 'var(--c-text-5)', fontSize: 12 }}>{wallet.nfts.length} NFTs held</div>
         </>
       )}
 
       {/* Transactions */}
       <div style={{ ...sectionTitle, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <span>RECENT ACTIVITY</span>
-        <span style={{ color: '#3a3a3a', fontWeight: 400 }}>{txList.length} loaded</span>
+        <span style={{ color: 'var(--c-text-9)', fontWeight: 400 }}>{txList.length} loaded</span>
       </div>
 
       {txList.map((tx) => (
@@ -432,7 +432,7 @@ export function PortfolioPanel({ wallet, market }: Props) {
       )}
 
       {!hasMore && txList.length > 0 && (
-        <div style={{ textAlign: 'center', color: '#3a3a3a', fontSize: 10, padding: '14px 0', letterSpacing: 1 }}>
+        <div style={{ textAlign: 'center', color: 'var(--c-text-9)', fontSize: 10, padding: '14px 0', letterSpacing: 1 }}>
           ALL TRANSACTIONS LOADED
         </div>
       )}
@@ -443,7 +443,7 @@ export function PortfolioPanel({ wallet, market }: Props) {
       )}
       {/* Market Intelligence */}
       {!market ? (
-        <div style={{ color: '#666', fontSize: 12 }}>Loading market intelligence...</div>
+        <div style={{ color: 'var(--c-text-6)', fontSize: 12 }}>Loading market intelligence...</div>
       ) : (
         <>
           <div style={sectionTitle}>FEAR & GREED INDEX</div>
@@ -470,7 +470,7 @@ function FearGreedGauge({ value, label }: { value: number; label: string }) {
 
   return (
     <div style={gaugeCard}>
-      <div style={{ color: '#C9C9C2', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Crypto Fear and Greed Index</div>
+      <div style={{ color: 'var(--c-text)', fontSize: 18, fontWeight: 700, marginBottom: 6 }}>Crypto Fear and Greed Index</div>
       <svg width="124" height="86" viewBox="0 0 124 86">
         <path d="M16 62 A46 46 0 0 1 39 22" stroke="#E55B63" strokeWidth="6" fill="none" strokeLinecap="round" />
         <path d="M39 22 A46 46 0 0 1 62 16" stroke="#DCA84A" strokeWidth="6" fill="none" strokeLinecap="round" />
@@ -480,8 +480,8 @@ function FearGreedGauge({ value, label }: { value: number; label: string }) {
         <circle cx={cx} cy={cy} r="6" fill="#B8B8B0" />
       </svg>
       <div style={{ marginTop: -2, textAlign: 'center' }}>
-        <div style={{ color: '#E8E8E0', fontSize: 38, fontWeight: 700, lineHeight: 1 }}>{clamped}</div>
-        <div style={{ color: '#9A9A93', fontSize: 14 }}>{label}</div>
+        <div style={{ color: 'var(--c-text)', fontSize: 38, fontWeight: 700, lineHeight: 1 }}>{clamped}</div>
+        <div style={{ color: 'var(--c-text-4)', fontSize: 14 }}>{label}</div>
       </div>
     </div>
   )
@@ -493,12 +493,12 @@ function NewsInsightCard({ item }: { item: MarketNewsInsight }) {
       ? '#4ADE80'
       : item.sentiment === 'bearish'
         ? '#F87171'
-        : '#A3A3A3'
+        : 'var(--c-text-4)'
 
   return (
     <div style={newsCard}>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-        <div style={{ color: '#E8E8E0', fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>{item.title}</div>
+        <div style={{ color: 'var(--c-text)', fontSize: 13, fontWeight: 700, lineHeight: 1.5 }}>{item.title}</div>
         <span style={{ ...sentimentBadge, color: sentimentColor, borderColor: `${sentimentColor}55` }}>
           {item.sentiment.toUpperCase()}
         </span>
@@ -507,7 +507,7 @@ function NewsInsightCard({ item }: { item: MarketNewsInsight }) {
       <div style={insightLine}><span style={insightLabel}>AI reasoning:</span> {item.aiReasoning}</div>
       <div style={insightLine}><span style={insightLabel}>Fear &amp; Greed link:</span> {item.fearGreedConnection}</div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 8 }}>
-        <span style={{ color: '#555', fontSize: 10 }}>{new Date(item.publishedAt).toLocaleString()}</span>
+        <span style={{ color: 'var(--c-text-6)', fontSize: 10 }}>{new Date(item.publishedAt).toLocaleString()}</span>
         <a href={item.url} target="_blank" rel="noreferrer" style={newsLink}>
           {item.source} ↗
         </a>
@@ -533,39 +533,39 @@ function RiskBadge({ level }: { level: string }) {
 function Metric({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <div style={{ fontSize: 10, color: '#555', letterSpacing: 1 }}>{label.toUpperCase()}</div>
-      <div style={{ fontSize: 16, color: '#E8E8E0', fontWeight: 700, marginTop: 2 }}>{value}</div>
+      <div style={{ fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 1 }}>{label.toUpperCase()}</div>
+      <div style={{ fontSize: 16, color: 'var(--c-text)', fontWeight: 700, marginTop: 2 }}>{value}</div>
     </div>
   )
 }
 
 const panel: CSSProperties = { flex: 1, overflowY: 'auto', padding: 24 }
 const netWorthCard: CSSProperties = {
-  background: 'rgba(255,255,255,0.02)',
-  border: '1px solid rgba(255,255,255,0.07)',
+  background: 'var(--c-surface)',
+  border: '1px solid var(--c-border-4)',
   borderRadius: 10, padding: '18px 20px',
   marginBottom: 8,
 }
-const sectionTitle: CSSProperties = { fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 14, marginTop: 24 }
+const sectionTitle: CSSProperties = { fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 2, marginBottom: 14, marginTop: 24 }
 const tokenRow: CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-  padding: '12px 0', borderBottom: '1px solid rgba(255,255,255,0.04)',
+  padding: '12px 0', borderBottom: '1px solid var(--c-border)',
 }
-const symStyle: CSSProperties = { fontSize: 14, fontWeight: 700, color: '#E8E8E0' }
-const nameStyle: CSSProperties = { fontSize: 11, color: '#555', marginTop: 2 }
-const valStyle: CSSProperties = { fontSize: 14, fontWeight: 600, color: '#E8E8E0' }
-const pctStyle: CSSProperties = { fontSize: 12, color: '#555', width: 40, textAlign: 'right' }
+const symStyle: CSSProperties = { fontSize: 14, fontWeight: 700, color: 'var(--c-text)' }
+const nameStyle: CSSProperties = { fontSize: 11, color: 'var(--c-text-6)', marginTop: 2 }
+const valStyle: CSSProperties = { fontSize: 14, fontWeight: 600, color: 'var(--c-text)' }
+const pctStyle: CSSProperties = { fontSize: 12, color: 'var(--c-text-6)', width: 40, textAlign: 'right' }
 const allocBar: CSSProperties = {
   height: 8, borderRadius: 4, display: 'flex', overflow: 'hidden',
-  background: 'rgba(255,255,255,0.05)',
+  background: 'var(--c-surface-4)',
 }
 const riskBox: CSSProperties = {
-  background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)',
+  background: 'var(--c-surface)', border: '1px solid var(--c-border-3)',
   borderRadius: 8, padding: 16,
 }
 const actRow: CSSProperties = {
   display: 'flex', alignItems: 'flex-start', gap: 10, padding: '10px 8px',
-  borderBottom: '1px solid rgba(255,255,255,0.03)',
+  borderBottom: '1px solid var(--c-surface-2)',
   borderRadius: 6, transition: 'background 0.15s',
 }
 const loadMoreBtn: CSSProperties = {
@@ -578,24 +578,24 @@ const loadMoreBtn: CSSProperties = {
 }
 const overlay: CSSProperties = {
   position: 'fixed', inset: 0, zIndex: 1000,
-  background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)',
+  background: 'var(--c-overlay)', backdropFilter: 'blur(4px)',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   padding: 20,
 }
 const modal: CSSProperties = {
-  background: '#111',
-  border: '1px solid rgba(255,255,255,0.08)',
+  background: 'var(--c-modal)',
+  border: '1px solid var(--c-border-5)',
   borderRadius: 12, padding: 24,
   width: '100%', maxWidth: 520,
   maxHeight: '85vh', overflowY: 'auto',
 }
 const modalSection: CSSProperties = {
-  fontSize: 10, color: '#555', letterSpacing: 2,
+  fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 2,
   marginBottom: 10, marginTop: 0,
 }
 const newsCard: React.CSSProperties = {
-  border: '1px solid rgba(255,255,255,0.08)',
-  background: 'rgba(255,255,255,0.02)',
+  border: '1px solid var(--c-border-5)',
+  background: 'var(--c-surface)',
   borderRadius: 8,
   padding: 12,
   marginBottom: 10,
@@ -609,19 +609,19 @@ const sentimentBadge: React.CSSProperties = {
   whiteSpace: 'nowrap',
 }
 const newsSummary: React.CSSProperties = {
-  color: '#A0A0A0',
+  color: 'var(--c-text-4)',
   fontSize: 12,
   lineHeight: 1.5,
   marginTop: 8,
 }
 const insightLine: React.CSSProperties = {
-  color: '#B8B8B0',
+  color: 'var(--c-text-3)',
   fontSize: 11,
   lineHeight: 1.5,
   marginTop: 8,
 }
 const insightLabel: React.CSSProperties = {
-  color: '#7F7F78',
+  color: 'var(--c-text-5)',
 }
 const newsLink: React.CSSProperties = {
   color: '#7C83FF',
@@ -629,8 +629,8 @@ const newsLink: React.CSSProperties = {
   textDecoration: 'none',
 }
 const gaugeCard: React.CSSProperties = {
-  border: '1px solid rgba(255,255,255,0.08)',
-  background: 'rgba(255,255,255,0.02)',
+  border: '1px solid var(--c-border-5)',
+  background: 'var(--c-surface)',
   borderRadius: 10,
   padding: 14,
   marginBottom: 12,
