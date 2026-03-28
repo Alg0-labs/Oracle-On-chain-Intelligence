@@ -74,9 +74,11 @@ const PROMPTS = [
 interface Props {
   wallet: WalletData
   address: string
+  snapshotUpdatedAt?: string | null
+  onWalletRefresh?: () => void
 }
 
-export function ChatPanel({ wallet, address }: Props) {
+export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh }: Props) {
   const [messages, setMessages] = useState<ChatMessage[]>([
     {
       id: '0',
@@ -93,6 +95,32 @@ export function ChatPanel({ wallet, address }: Props) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages, loading])
+
+  useEffect(() => {
+    setMessages([
+      {
+        id: '0',
+        role: 'assistant',
+        content: buildWelcome(wallet),
+        timestamp: new Date(),
+      },
+    ])
+  }, [address])
+
+  useEffect(() => {
+    if (snapshotUpdatedAt == null) return
+    setMessages((prev) => {
+      if (prev.length !== 1) return prev
+      return [
+        {
+          id: '0',
+          role: 'assistant',
+          content: buildWelcome(wallet),
+          timestamp: new Date(),
+        },
+      ]
+    })
+  }, [snapshotUpdatedAt, wallet])
 
   const send = async (text?: string) => {
     const q = (text ?? input).trim()
@@ -195,6 +223,7 @@ export function ChatPanel({ wallet, address }: Props) {
           onClose={() => setPendingTx(null)}
           onSuccess={hash => {
             setPendingTx(null)
+            onWalletRefresh?.()
             setMessages(prev => [
               ...prev,
               {

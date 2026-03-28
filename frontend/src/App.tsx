@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
 import { ChatPanel } from './components/ChatPanel.js'
 import { PortfolioPanel } from './components/PortfolioPanel.js'
-import { fetchWallet, fetchMarket } from './lib/api.js'
+import { fetchWallet, fetchMarket, refreshWallet } from './lib/api.js'
 import type { WalletData, MarketData } from './types/index.js'
 
 type Tab = 'chat' | 'portfolio'
@@ -16,24 +16,44 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('chat')
+  const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState<string | null>(null)
+  const [refreshingWallet, setRefreshingWallet] = useState(false)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
 
   // Fetch wallet data whenever address changes
   useEffect(() => {
     if (!address || !isConnected) {
       setWallet(null)
       setMarket(null)
+      setSnapshotUpdatedAt(null)
       return
     }
     setLoading(true)
     setError(null)
     Promise.all([fetchWallet(address), fetchMarket(address)])
-      .then(([walletData, marketData]) => {
-        setWallet(walletData)
+      .then(([wRes, marketData]) => {
+        setWallet(wRes.wallet)
+        setSnapshotUpdatedAt(wRes.snapshotUpdatedAt)
         setMarket(marketData)
       })
       .catch(err => setError(err.message ?? 'Failed to load wallet'))
       .finally(() => setLoading(false))
   }, [address, isConnected])
+
+  const handleRefreshPortfolio = () => {
+    if (!address || refreshingWallet) return
+    setRefreshingWallet(true)
+    setRefreshError(null)
+    refreshWallet(address)
+      .then((wRes) => {
+        setWallet(wRes.wallet)
+        setSnapshotUpdatedAt(wRes.snapshotUpdatedAt)
+        return fetchMarket(address)
+      })
+      .then((marketData) => setMarket(marketData))
+      .catch((err) => setRefreshError(err.message ?? 'Refresh failed'))
+      .finally(() => setRefreshingWallet(false))
+  }
 
   // ── Landing ────────────────────────────────────────────────────────────────
   if (!isConnected) {
@@ -133,6 +153,21 @@ export default function App() {
             {parseFloat(wallet.ethBalance).toFixed(4)} ETH
           </div>
         </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, minWidth: 120 }}>
+          <div style={label}>DATA</div>
+          <button
+            type="button"
+            style={{ ...refreshBtn, opacity: refreshingWallet ? 0.5 : 1 }}
+            onClick={handleRefreshPortfolio}
+            disabled={refreshingWallet}
+          >
+            {refreshingWallet ? '…' : '↻ Refresh'}
+          </button>
+          {snapshotUpdatedAt && (
+            <span style={snapTime}>{new Date(snapshotUpdatedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+          )}
+          {refreshError && <span style={refreshErrStyle}>{refreshError}</span>}
+        </div>
       </div>
 
       {/* Tabs */}
@@ -147,7 +182,7 @@ export default function App() {
       {/* Content */}
       <div style={content}>
         {tab === 'chat'
-          ? <ChatPanel wallet={wallet} address={wallet.address} />
+          ? <ChatPanel wallet={wallet} address={wallet.address} snapshotUpdatedAt={snapshotUpdatedAt} onWalletRefresh={handleRefreshPortfolio} />
           : <PortfolioPanel wallet={wallet} market={market} />
         }
       </div>
@@ -267,6 +302,31 @@ const tabBtn: React.CSSProperties = {
   borderBottom: '2px solid transparent', transition: 'all 0.2s',
 }
 const tabActive: React.CSSProperties = { color: '#6366F1', borderBottomColor: '#6366F1' }
+const refreshBtn: React.CSSProperties = {
+  padding: '6px 12px',
+  background: 'rgba(99,102,241,0.12)',
+  border: '1px solid rgba(99,102,241,0.35)',
+  borderRadius: 4,
+  color: '#A5B4FC',
+  fontSize: 11,
+  fontFamily: "'IBM Plex Mono', monospace",
+  letterSpacing: 1,
+  cursor: 'pointer',
+}
+const refreshErrStyle: React.CSSProperties = {
+  fontSize: 9,
+  color: '#F87171',
+  fontFamily: "'IBM Plex Mono', monospace",
+  maxWidth: 140,
+  textAlign: 'right',
+}
+const snapTime: React.CSSProperties = {
+  fontSize: 9,
+  color: '#444',
+  fontFamily: "'IBM Plex Mono', monospace",
+  maxWidth: 120,
+  textAlign: 'right',
+}
 const content: React.CSSProperties = {
   position: 'relative', zIndex: 2,
   flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column',
