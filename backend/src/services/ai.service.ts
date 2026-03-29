@@ -3,6 +3,8 @@ import type { MessageParam, Tool, ToolResultBlockParam } from '@anthropic-ai/sdk
 import type { ChatMessage, ChatResponse, SendTxIntent, MarketContext, WalletData } from '../types/index.js'
 import { fetchMarketContext } from './market.service.js'
 import { isValidEvmAddress, isPositiveDecimal } from '../utils/tx-builder.js'
+import { buildSystemPrompt } from '../prompts/system-prompt.js'
+import { SEND_ETH_TOOL, SEND_TOKEN_TOOL } from '../prompts/tools.js'
 import dotenv from 'dotenv'
 
 dotenv.config({ override: true })
@@ -175,6 +177,7 @@ function compactMarket(m: MarketContext): object {
   }
 }
 
+// ─── Parse transaction intent from tool use ───────────────────────────────────
 function parseToolTxIntent(content: unknown[]): SendTxIntent | undefined {
   const toolUse = content.find(
     (block: any) =>
