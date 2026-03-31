@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useAppKit } from '@reown/appkit/react'
-import { useAccount, useDisconnect } from 'wagmi'
+import { useAccount } from 'wagmi'
 import { ChatPanel } from './components/ChatPanel.js'
 import { PortfolioPanel } from './components/PortfolioPanel.js'
+import { TradingArena } from './components/TradingArena.js'
 import { fetchWallet, fetchMarket, refreshWallet } from './lib/api.js'
 import { useTheme } from './lib/theme.js'
-import type { WalletData, MarketData } from './types/index.js'
+import type { WalletData, MarketData, AppMode } from './types/index.js'
 
 type Tab = 'chat' | 'portfolio'
 
@@ -13,7 +14,6 @@ export default function App() {
   // Use wagmi's useAccount as the ground truth for connection state.
   // useAppKitAccount can lag on disconnect; wagmi fires immediately.
   const { address, isConnected } = useAccount()
-  const { disconnect } = useDisconnect()
   const { open } = useAppKit()
   const { theme, toggle } = useTheme()
 
@@ -22,9 +22,20 @@ export default function App() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<Tab>('chat')
+  const [appMode, setAppMode] = useState<AppMode>('wallet')
+  const [modeTransitioning, setModeTransitioning] = useState(false)
   const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState<string | null>(null)
   const [refreshingWallet, setRefreshingWallet] = useState(false)
   const [refreshError, setRefreshError] = useState<string | null>(null)
+
+  const switchMode = (next: AppMode) => {
+    if (next === appMode || modeTransitioning) return
+    setModeTransitioning(true)
+    setTimeout(() => {
+      setAppMode(next)
+      setModeTransitioning(false)
+    }, 350)
+  }
 
   // Fetch wallet data whenever address changes; abort + reset on disconnect
   useEffect(() => {
@@ -148,10 +159,11 @@ export default function App() {
       <header style={header}>
         <Logo size="sm" />
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+          {/* Mode Toggle */}
+          <ModeToggle mode={appMode} onSwitch={switchMode} />
           <RiskBadge level={wallet.riskLevel} />
           {wallet.ensName && <span style={ens}>{wallet.ensName}</span>}
           <ThemeToggle theme={theme} toggle={toggle} />
-          {/* Reown built-in button handles disconnect/account */}
           <w3m-button size="sm" />
         </div>
       </header>
@@ -191,27 +203,87 @@ export default function App() {
         </div>
       </div>
 
-      {/* Tabs */}
-      <div style={tabs}>
-        {(['chat', 'portfolio'] as Tab[]).map(t => (
-          <button key={t} style={{ ...tabBtn, ...(tab === t ? tabActive : {}) }} onClick={() => setTab(t)}>
-            {t === 'chat' ? 'AI CHAT' : 'PORTFOLIO'}
-          </button>
-        ))}
-      </div>
+      {/* Tabs — only shown in wallet mode */}
+      {appMode === 'wallet' && (
+        <div style={tabs}>
+          {(['chat', 'portfolio'] as Tab[]).map(t => (
+            <button key={t} style={{ ...tabBtn, ...(tab === t ? tabActive : {}) }} onClick={() => setTab(t)}>
+              {t === 'chat' ? 'AI CHAT' : 'PORTFOLIO'}
+            </button>
+          ))}
+        </div>
+      )}
 
-      {/* Content */}
-      <div style={content}>
-        {tab === 'chat'
-          ? <ChatPanel wallet={wallet} address={wallet.address} snapshotUpdatedAt={snapshotUpdatedAt} onWalletRefresh={handleRefreshPortfolio} />
-          : <PortfolioPanel wallet={wallet} market={market} />
-        }
+      {/* Trading Arena mode bar */}
+      {appMode === 'trading' && (
+        <div style={arenaBar}>
+          <span style={arenaBarLabel}>⚡ TRADING ARENA</span>
+          <span style={arenaBarSub}>AI-powered trade validation · Multi-agent analysis · Real-time signals</span>
+        </div>
+      )}
+
+      {/* Content — animated slide */}
+      <div style={{
+        ...content,
+        opacity: modeTransitioning ? 0 : 1,
+        transform: modeTransitioning
+          ? appMode === 'wallet' ? 'translateX(-24px)' : 'translateX(24px)'
+          : 'translateX(0)',
+        transition: 'opacity 0.35s ease, transform 0.35s ease',
+      }}>
+        {appMode === 'wallet' ? (
+          tab === 'chat'
+            ? <ChatPanel wallet={wallet} address={wallet.address} snapshotUpdatedAt={snapshotUpdatedAt} onWalletRefresh={handleRefreshPortfolio} />
+            : <PortfolioPanel wallet={wallet} market={market} />
+        ) : (
+          <TradingArena wallet={wallet} />
+        )}
       </div>
     </div>
   )
 }
 
 // ── Sub-components ────────────────────────────────────────────────────────────
+
+// ── Mode Toggle ───────────────────────────────────────────────────────────────
+function ModeToggle({ mode, onSwitch }: { mode: AppMode; onSwitch: (m: AppMode) => void }) {
+  return (
+    <div style={modeToggleWrap}>
+      <button
+        style={{
+          ...modeToggleBtn,
+          color: mode === 'wallet' ? '#E8E8E0' : '#444',
+          background: mode === 'wallet' ? 'rgba(99,102,241,0.15)' : 'transparent',
+        }}
+        onClick={() => onSwitch('wallet')}
+        title="Wallet Intelligence"
+      >
+        <span style={{ marginRight: 5 }}>◈</span>WALLET
+      </button>
+      <button
+        style={{
+          ...modeToggleBtn,
+          color: mode === 'trading' ? '#E8E8E0' : '#444',
+          background: mode === 'trading' ? 'rgba(99,102,241,0.15)' : 'transparent',
+        }}
+        onClick={() => onSwitch('trading')}
+        title="Trading Arena"
+      >
+        <span style={{ marginRight: 5, color: mode === 'trading' ? '#FBBF24' : '#444' }}>⚡</span>TRADE
+      </button>
+    </div>
+  )
+}
+
+const modeToggleWrap: React.CSSProperties = {
+  display: 'flex', border: '1px solid rgba(99,102,241,0.25)', borderRadius: 6,
+  overflow: 'hidden', background: 'rgba(255,255,255,0.02)',
+}
+const modeToggleBtn: React.CSSProperties = {
+  padding: '5px 14px', background: 'transparent', border: 'none',
+  cursor: 'pointer', fontSize: 10, fontFamily: "'IBM Plex Mono', monospace",
+  letterSpacing: 1.5, fontWeight: 700, transition: 'all 0.2s', display: 'flex', alignItems: 'center',
+}
 
 function Logo({ size }: { size: 'sm' | 'lg' }) {
   const fs = size === 'lg' ? { glyph: 52, text: 48, gap: 2, spacing: 10 } : { glyph: 20, text: 18, gap: 2, spacing: 6 }
@@ -274,10 +346,10 @@ function Glow() {
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const root: React.CSSProperties = {
-  minHeight: '100vh', height: '100vh',
+  height: '100%',
   background: 'var(--c-bg)', color: 'var(--c-text)',
   fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
-  position: 'relative', overflow: 'hidden',
+  position: 'relative', overflowX: 'hidden',
   display: 'flex', flexDirection: 'column',
 }
 const landing: React.CSSProperties = {
@@ -347,6 +419,19 @@ const tabBtn: React.CSSProperties = {
   borderBottom: '2px solid transparent', transition: 'all 0.2s',
 }
 const tabActive: React.CSSProperties = { color: '#6366F1', borderBottomColor: '#6366F1' }
+const arenaBar: React.CSSProperties = {
+  position: 'relative', zIndex: 2,
+  display: 'flex', alignItems: 'center', gap: 16,
+  padding: '8px 24px', flexShrink: 0,
+  borderBottom: '1px solid rgba(99,102,241,0.2)',
+  background: 'linear-gradient(90deg, rgba(99,102,241,0.08), transparent)',
+}
+const arenaBarLabel: React.CSSProperties = {
+  fontSize: 11, fontWeight: 800, color: '#6366F1', letterSpacing: 2,
+}
+const arenaBarSub: React.CSSProperties = {
+  fontSize: 10, color: '#444', letterSpacing: 1,
+}
 const refreshBtn: React.CSSProperties = {
   padding: '6px 12px',
   background: 'rgba(99,102,241,0.12)',
@@ -374,5 +459,6 @@ const snapTime: React.CSSProperties = {
 }
 const content: React.CSSProperties = {
   position: 'relative', zIndex: 2,
-  flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column',
+  flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden',
+  display: 'flex', flexDirection: 'column',
 }
