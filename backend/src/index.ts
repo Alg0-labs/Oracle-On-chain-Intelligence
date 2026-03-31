@@ -12,6 +12,7 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:4173',
+  'http://localhost:5174',
 ].filter(Boolean) as string[]
 
 app.use(
@@ -50,6 +51,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n🔮 ØRACLE backend running on port ${PORT}`)
   console.log(`   Anthropic: ${process.env.ANTHROPIC_API_KEY ? '✓' : '✗ missing'}`)
   console.log(`   Moralis:   ${process.env.MORALIS_API_KEY ? '✓' : '✗ missing'}`)
+  console.log(`   Database:  ${process.env.DATABASE_URL ? '✓' : '✗ missing'}`)
   console.log(`   Allowed origins: ${allowedOrigins.join(', ')}`)
   console.log()
 })

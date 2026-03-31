@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react'
-import { useAppKitAccount, useAppKit } from '@reown/appkit/react'
+import { useAppKit } from '@reown/appkit/react'
+import { useAccount } from 'wagmi'
 import { ChatPanel } from './components/ChatPanel.js'
 import { PortfolioPanel } from './components/PortfolioPanel.js'
 import { TradingArena } from './components/TradingArena.js'
-import { fetchWallet, fetchMarket } from './lib/api.js'
+import { fetchWallet, fetchMarket, refreshWallet } from './lib/api.js'
+import { useTheme } from './lib/theme.js'
 import type { WalletData, MarketData, AppMode } from './types/index.js'
 
 type Tab = 'chat' | 'portfolio'
 
 export default function App() {
-  const { address, isConnected } = useAppKitAccount()
+  // Use wagmi's useAccount as the ground truth for connection state.
+  // useAppKitAccount can lag on disconnect; wagmi fires immediately.
+  const { address, isConnected } = useAccount()
   const { open } = useAppKit()
+  const { theme, toggle } = useTheme()
 
   const [wallet, setWallet] = useState<WalletData | null>(null)
   const [market, setMarket] = useState<MarketData | null>(null)
@@ -19,6 +24,9 @@ export default function App() {
   const [tab, setTab] = useState<Tab>('chat')
   const [appMode, setAppMode] = useState<AppMode>('wallet')
   const [modeTransitioning, setModeTransitioning] = useState(false)
+  const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState<string | null>(null)
+  const [refreshingWallet, setRefreshingWallet] = useState(false)
+  const [refreshError, setRefreshError] = useState<string | null>(null)
 
   const switchMode = (next: AppMode) => {
     if (next === appMode || modeTransitioning) return
@@ -29,23 +37,53 @@ export default function App() {
     }, 350)
   }
 
-  // Fetch wallet data whenever address changes
+  // Fetch wallet data whenever address changes; abort + reset on disconnect
   useEffect(() => {
     if (!address || !isConnected) {
       setWallet(null)
       setMarket(null)
+      setSnapshotUpdatedAt(null)
+      setLoading(false)
+      setError(null)
       return
     }
+
+    let cancelled = false
     setLoading(true)
     setError(null)
+
     Promise.all([fetchWallet(address), fetchMarket(address)])
-      .then(([walletData, marketData]) => {
-        setWallet(walletData)
+      .then(([wRes, marketData]) => {
+        if (cancelled) return
+        setWallet(wRes.wallet)
+        setSnapshotUpdatedAt(wRes.snapshotUpdatedAt)
         setMarket(marketData)
       })
-      .catch(err => setError(err.message ?? 'Failed to load wallet'))
-      .finally(() => setLoading(false))
+      .catch(err => {
+        if (cancelled) return
+        setError(err.message ?? 'Failed to load wallet')
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false)
+      })
+
+    return () => { cancelled = true }
   }, [address, isConnected])
+
+  const handleRefreshPortfolio = () => {
+    if (!address || refreshingWallet) return
+    setRefreshingWallet(true)
+    setRefreshError(null)
+    refreshWallet(address)
+      .then((wRes) => {
+        setWallet(wRes.wallet)
+        setSnapshotUpdatedAt(wRes.snapshotUpdatedAt)
+        return fetchMarket(address)
+      })
+      .then((marketData) => setMarket(marketData))
+      .catch((err) => setRefreshError(err.message ?? 'Refresh failed'))
+      .finally(() => setRefreshingWallet(false))
+  }
 
   // ── Landing ────────────────────────────────────────────────────────────────
   if (!isConnected) {
@@ -54,6 +92,7 @@ export default function App() {
         <Noise />
         <Grid />
         <Glow />
+        <ThemeToggle theme={theme} toggle={toggle} floating />
         <div style={landing}>
           <Logo size="lg" />
           <p style={tagline}>On-chain intelligence, distilled.</p>
@@ -83,11 +122,11 @@ export default function App() {
           <Logo size="lg" />
           <div style={spinnerWrap}>
             <div style={spinner} />
-            <p style={{ color: '#888', fontSize: 13, fontFamily: 'monospace', margin: 0 }}>
+            <p style={{ color: 'var(--c-text-5)', fontSize: 13, fontFamily: 'monospace', margin: 0 }}>
               Indexing {address?.slice(0, 8)}...
             </p>
           </div>
-          <p style={{ color: '#444', fontSize: 11, fontFamily: 'monospace' }}>
+          <p style={{ color: 'var(--c-text-7)', fontSize: 11, fontFamily: 'monospace' }}>
             Fetching balances, tokens &amp; transactions
           </p>
         </div>
@@ -124,6 +163,7 @@ export default function App() {
           <ModeToggle mode={appMode} onSwitch={switchMode} />
           <RiskBadge level={wallet.riskLevel} />
           {wallet.ensName && <span style={ens}>{wallet.ensName}</span>}
+          <ThemeToggle theme={theme} toggle={toggle} />
           <w3m-button size="sm" />
         </div>
       </header>
@@ -136,15 +176,30 @@ export default function App() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={label}>CHAIN</div>
-          <div style={{ color: '#888', fontSize: 14, fontFamily: 'monospace', marginTop: 2 }}>
+          <div style={{ color: 'var(--c-text-5)', fontSize: 14, fontFamily: 'monospace', marginTop: 2 }}>
             {wallet.chain} · {wallet.address.slice(0, 6)}...{wallet.address.slice(-4)}
           </div>
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={label}>ETH</div>
-          <div style={{ color: '#E8E8E0', fontSize: 18, fontWeight: 700, marginTop: 2 }}>
+          <div style={{ color: 'var(--c-text)', fontSize: 18, fontWeight: 700, marginTop: 2 }}>
             {parseFloat(wallet.ethBalance).toFixed(4)} ETH
           </div>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, minWidth: 120 }}>
+          <div style={label}>DATA</div>
+          <button
+            type="button"
+            style={{ ...refreshBtn, opacity: refreshingWallet ? 0.5 : 1 }}
+            onClick={handleRefreshPortfolio}
+            disabled={refreshingWallet}
+          >
+            {refreshingWallet ? '…' : '↻ Refresh'}
+          </button>
+          {snapshotUpdatedAt && (
+            <span style={snapTime}>{new Date(snapshotUpdatedAt).toLocaleString(undefined, { dateStyle: 'short', timeStyle: 'short' })}</span>
+          )}
+          {refreshError && <span style={refreshErrStyle}>{refreshError}</span>}
         </div>
       </div>
 
@@ -178,7 +233,7 @@ export default function App() {
       }}>
         {appMode === 'wallet' ? (
           tab === 'chat'
-            ? <ChatPanel wallet={wallet} address={wallet.address} />
+            ? <ChatPanel wallet={wallet} address={wallet.address} snapshotUpdatedAt={snapshotUpdatedAt} onWalletRefresh={handleRefreshPortfolio} />
             : <PortfolioPanel wallet={wallet} market={market} />
         ) : (
           <TradingArena wallet={wallet} />
@@ -235,7 +290,7 @@ function Logo({ size }: { size: 'sm' | 'lg' }) {
   return (
     <div style={{ display: 'flex', alignItems: 'baseline', gap: fs.gap }}>
       <span style={{ fontSize: fs.glyph, fontWeight: 900, color: '#6366F1', lineHeight: 1, fontFamily: 'serif' }}>⌀</span>
-      <span style={{ fontSize: fs.text, fontWeight: 800, letterSpacing: fs.spacing, color: '#E8E8E0', fontFamily: "'IBM Plex Mono', monospace" }}>RACLE</span>
+      <span style={{ fontSize: fs.text, fontWeight: 800, letterSpacing: fs.spacing, color: 'var(--c-text)', fontFamily: "'IBM Plex Mono', monospace" }}>RACLE</span>
     </div>
   )
 }
@@ -254,21 +309,45 @@ function RiskBadge({ level }: { level: string }) {
   )
 }
 
+function ThemeToggle({ theme, toggle, floating }: { theme: string; toggle: () => void; floating?: boolean }) {
+  return (
+    <button
+      onClick={toggle}
+      title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+      style={{
+        background: 'var(--c-surface-3)',
+        border: '1px solid var(--c-border-5)',
+        borderRadius: 6,
+        width: 34, height: 34,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        cursor: 'pointer', fontSize: 15, flexShrink: 0,
+        color: 'var(--c-text-4)',
+        transition: 'all 0.2s',
+        ...(floating ? {
+          position: 'fixed', top: 16, right: 16, zIndex: 10,
+        } : {}),
+      }}
+    >
+      {theme === 'dark' ? '☀' : '☽'}
+    </button>
+  )
+}
+
 function Noise() {
-  return <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E\")", opacity: 0.4 }} />
+  return <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E\")", opacity: 'var(--c-noise-opacity)' as unknown as number }} />
 }
 function Grid() {
-  return <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
+  return <div style={{ position: 'fixed', inset: 0, zIndex: 0, pointerEvents: 'none', backgroundImage: 'linear-gradient(var(--c-grid) 1px, transparent 1px), linear-gradient(90deg, var(--c-grid) 1px, transparent 1px)', backgroundSize: '48px 48px' }} />
 }
 function Glow() {
-  return <div style={{ position: 'fixed', top: -200, left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)' }} />
+  return <div style={{ position: 'fixed', top: -200, left: '50%', transform: 'translateX(-50%)', width: 600, height: 400, borderRadius: '50%', zIndex: 0, pointerEvents: 'none', background: 'radial-gradient(ellipse, rgba(99,102,241,0.12) 0%, transparent 70%)', opacity: 'var(--c-glow-opacity)' as unknown as number }} />
 }
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
 const root: React.CSSProperties = {
   height: '100%',
-  background: '#080A0F', color: '#E8E8E0',
+  background: 'var(--c-bg)', color: 'var(--c-text)',
   fontFamily: "'IBM Plex Mono', 'Courier New', monospace",
   position: 'relative', overflowX: 'hidden',
   display: 'flex', flexDirection: 'column',
@@ -278,8 +357,8 @@ const landing: React.CSSProperties = {
   display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
   minHeight: '100vh', gap: 24, padding: 32, textAlign: 'center',
 }
-const tagline: React.CSSProperties = { fontSize: 20, color: '#A0A0A0', fontWeight: 300, letterSpacing: 3, margin: 0 }
-const sub: React.CSSProperties = { fontSize: 14, color: '#555', maxWidth: 420, lineHeight: 1.8, margin: 0 }
+const tagline: React.CSSProperties = { fontSize: 20, color: 'var(--c-text-4)', fontWeight: 300, letterSpacing: 3, margin: 0 }
+const sub: React.CSSProperties = { fontSize: 14, color: 'var(--c-text-6)', maxWidth: 420, lineHeight: 1.8, margin: 0 }
 const connectBtn: React.CSSProperties = {
   marginTop: 8, padding: '14px 40px',
   background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
@@ -295,7 +374,7 @@ const pill: React.CSSProperties = {
   color: '#6366F1', fontSize: 11, letterSpacing: 1,
 }
 const sendHint: React.CSSProperties = {
-  marginTop: 20, color: '#555', fontSize: 12,
+  marginTop: 20, color: 'var(--c-text-6)', fontSize: 12,
   fontFamily: "'IBM Plex Mono', monospace", textAlign: 'center', lineHeight: 1.8,
 }
 const code: React.CSSProperties = {
@@ -313,8 +392,8 @@ const header: React.CSSProperties = {
   position: 'relative', zIndex: 2,
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
   padding: '14px 24px',
-  borderBottom: '1px solid rgba(255,255,255,0.05)',
-  background: 'rgba(8,10,15,0.95)', backdropFilter: 'blur(10px)',
+  borderBottom: '1px solid var(--c-border-2)',
+  background: 'var(--c-header)', backdropFilter: 'blur(10px)',
   flexShrink: 0,
 }
 const ens: React.CSSProperties = { fontSize: 12, color: '#6366F1', fontFamily: 'monospace' }
@@ -322,25 +401,24 @@ const worthBar: React.CSSProperties = {
   position: 'relative', zIndex: 2,
   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
   padding: '16px 24px', flexShrink: 0,
-  borderBottom: '1px solid rgba(255,255,255,0.05)',
-  background: 'rgba(255,255,255,0.015)',
+  borderBottom: '1px solid var(--c-border-2)',
+  background: 'var(--c-bg-alt)',
 }
-const label: React.CSSProperties = { fontSize: 10, color: '#555', letterSpacing: 2, marginBottom: 4 }
-const worthVal: React.CSSProperties = { fontSize: 28, fontWeight: 700, letterSpacing: -1, color: '#E8E8E0' }
+const label: React.CSSProperties = { fontSize: 10, color: 'var(--c-text-6)', letterSpacing: 2, marginBottom: 4 }
+const worthVal: React.CSSProperties = { fontSize: 28, fontWeight: 700, letterSpacing: -1, color: 'var(--c-text)' }
 const tabs: React.CSSProperties = {
   position: 'relative', zIndex: 2,
   display: 'flex', flexShrink: 0,
-  borderBottom: '1px solid rgba(255,255,255,0.05)',
+  borderBottom: '1px solid var(--c-border-2)',
 }
 const tabBtn: React.CSSProperties = {
   flex: 1, padding: '11px 0',
   background: 'transparent', border: 'none', cursor: 'pointer',
-  color: '#555', fontSize: 11, letterSpacing: 2,
+  color: 'var(--c-text-6)', fontSize: 11, letterSpacing: 2,
   fontFamily: "'IBM Plex Mono', monospace",
   borderBottom: '2px solid transparent', transition: 'all 0.2s',
 }
 const tabActive: React.CSSProperties = { color: '#6366F1', borderBottomColor: '#6366F1' }
-
 const arenaBar: React.CSSProperties = {
   position: 'relative', zIndex: 2,
   display: 'flex', alignItems: 'center', gap: 16,
@@ -354,7 +432,31 @@ const arenaBarLabel: React.CSSProperties = {
 const arenaBarSub: React.CSSProperties = {
   fontSize: 10, color: '#444', letterSpacing: 1,
 }
-
+const refreshBtn: React.CSSProperties = {
+  padding: '6px 12px',
+  background: 'rgba(99,102,241,0.12)',
+  border: '1px solid rgba(99,102,241,0.35)',
+  borderRadius: 4,
+  color: '#A5B4FC',
+  fontSize: 11,
+  fontFamily: "'IBM Plex Mono', monospace",
+  letterSpacing: 1,
+  cursor: 'pointer',
+}
+const refreshErrStyle: React.CSSProperties = {
+  fontSize: 9,
+  color: '#F87171',
+  fontFamily: "'IBM Plex Mono', monospace",
+  maxWidth: 140,
+  textAlign: 'right',
+}
+const snapTime: React.CSSProperties = {
+  fontSize: 9,
+  color: '#444',
+  fontFamily: "'IBM Plex Mono', monospace",
+  maxWidth: 120,
+  textAlign: 'right',
+}
 const content: React.CSSProperties = {
   position: 'relative', zIndex: 2,
   flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden',

@@ -5,6 +5,10 @@ import { QueryClientProvider } from '@tanstack/react-query'
 import { wagmiAdapter, queryClient } from './lib/reown.js'
 import App from './App.js'
 import './index.css'
+import { initTheme } from './lib/theme.js'
+
+// Apply stored theme before first paint to avoid flash
+initTheme()
 
 // Initialize Reown AppKit (WalletConnect v3)
 import './lib/reown.js'
