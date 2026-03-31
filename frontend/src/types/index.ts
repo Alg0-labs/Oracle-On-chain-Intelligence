@@ -162,3 +162,98 @@ export interface MarketData {
   latestNewsInsights: MarketNewsInsight[]
   fetchedAt: number
 }
+
+// ── Trading Copilot Types ─────────────────────────────────────────────────────
+
+export interface MomentumSignal {
+  rsi: number
+  macd: { value: number; signal: number; histogram: number }
+  trend: 'oversold' | 'neutral' | 'overbought'
+  priceChange24h: number
+  confidence: number
+}
+
+export interface SentimentPulse {
+  score: number
+  fearGreedIndex: number
+  fearGreedLabel: string
+  trending: boolean
+  shift: 'bullish' | 'bearish' | 'neutral'
+  confidence: number
+}
+
+export interface WhaleActivity {
+  volumeAnomaly: number
+  direction: 'accumulation' | 'distribution' | 'neutral'
+  alert: boolean
+  netFlow: 'inflow' | 'outflow' | 'neutral'
+  confidence: number
+}
+
+export interface NewsImpact {
+  hasBreakingNews: boolean
+  sentiment: 'positive' | 'negative' | 'neutral'
+  importance: 'low' | 'medium' | 'high'
+  headlines: string[]
+  confidence: number
+}
+
+export interface QuickCheckResult {
+  sessionId: string
+  severity: 'low' | 'medium' | 'high'
+  recommendation: 'EXECUTE' | 'CAUTION' | 'AVOID'
+  confidence: number
+  insights: string[]
+  signals: {
+    momentum: MomentumSignal
+    sentiment: SentimentPulse
+    whales: WhaleActivity
+    news: NewsImpact
+  }
+  suggestedActions: Array<{
+    label: string
+    action: 'execute' | 'wait' | 'limit' | 'analyze'
+    params?: Record<string, unknown>
+  }>
+  executionTimeMs?: number
+}
+
+export interface AnalystReport {
+  analyst: 'market' | 'sentiment' | 'news' | 'onchain'
+  signal: 'bullish' | 'bearish' | 'neutral'
+  confidence: number
+  keyFindings: string[]
+  reasoning: string
+}
+
+export interface DebateMessage {
+  speaker: 'bull' | 'bear' | 'facilitator'
+  round: number
+  argument: string
+  keyPoints: string[]
+}
+
+export interface DeepAnalysisResult {
+  action: 'BUY' | 'SELL' | 'HOLD'
+  confidence: number
+  reasoning: string
+  conviction: 'strong' | 'moderate' | 'weak'
+  positionSize: number
+  entryStrategy: { method: 'market' | 'limit' | 'dca'; targetPrice?: number; dcaSchedule?: string }
+  exitStrategy: { targetPrice?: number; stopLoss?: number; trailingStop?: number }
+  alternatives: Array<{ action: string; description: string }>
+  analystReports: AnalystReport[]
+  debate: DebateMessage[]
+  risk: {
+    riskLevel: 'low' | 'medium' | 'high' | 'extreme'
+    maxPositionPct: number
+    suggestedPositionPct: number
+    stopLossPrice?: number
+    takeProfitPrice?: number
+    riskRewardRatio?: number
+    warnings: string[]
+  }
+  executionTimeMs: number
+}
+
+export type AppMode = 'wallet' | 'trading'

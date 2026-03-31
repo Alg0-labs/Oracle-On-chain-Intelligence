@@ -32,8 +32,14 @@ app.use(
   })
 )
 
-app.use(express.json())
+// Limit request bodies to 64 KB — prevents DoS via oversized payloads
+app.use(express.json({ limit: '64kb' }))
 app.use('/api', router)
+
+// Catch unhandled rejections so the server doesn't crash on unexpected async errors
+process.on('unhandledRejection', (reason) => {
+  console.error('[server] Unhandled promise rejection:', reason)
+})
 
 // Railway / Vercel health check
 app.get('/', (_req, res) => {
