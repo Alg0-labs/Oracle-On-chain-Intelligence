@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import styles from './Navbar.module.css'
+import { useTheme } from '../../lib/theme'
 
 const NAV_LINKS = [
   { label: 'Features',     href: '#features' },
@@ -12,6 +13,7 @@ const NAV_LINKS = [
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
   const [menuOpen, setMenuOpen] = useState(false)
+  const { theme, toggle } = useTheme()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40)
@@ -46,6 +48,14 @@ export function Navbar() {
 
         {/* Right CTA group */}
         <div className={styles.ctaGroup}>
+          <button
+            onClick={toggle}
+            className={styles.themeToggle}
+            title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? '☀' : '☽'}
+          </button>
           <a
             href="https://app.oracleprotocol.online"
             className={styles.signInBtn}
@@ -85,6 +95,12 @@ export function Navbar() {
               {l.label}
             </a>
           ))}
+          <button
+            onClick={() => { toggle(); closeMenu() }}
+            className={styles.mobileThemeToggle}
+          >
+            {theme === 'dark' ? '☀  Switch to Light Mode' : '☽  Switch to Dark Mode'}
+          </button>
           <div className={styles.mobileDivider} />
           <a
             href="https://app.oracleprotocol.online"

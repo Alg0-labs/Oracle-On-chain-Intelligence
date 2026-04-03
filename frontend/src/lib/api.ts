@@ -2,11 +2,34 @@ import type { WalletData, Transaction, ChatMessage, SendTxIntent, MarketData } f
 
 const BASE = (import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001') + '/api'
 
-export async function fetchWallet(address: string): Promise<WalletData> {
+export type FetchWalletResult = {
+  wallet: WalletData
+  snapshotUpdatedAt: string | null
+  hydratedFromIndexer?: boolean
+}
+
+export async function fetchWallet(address: string): Promise<FetchWalletResult> {
   const res = await fetch(`${BASE}/wallet/${address}`)
   const json = await res.json()
   if (!json.success) throw new Error(json.error ?? 'Failed to fetch wallet')
-  return json.wallet
+  return {
+    wallet: json.wallet,
+    snapshotUpdatedAt: json.snapshotUpdatedAt ?? null,
+    hydratedFromIndexer: json.hydratedFromIndexer,
+  }
+}
+
+export async function refreshWallet(address: string): Promise<FetchWalletResult> {
+  const res = await fetch(`${BASE}/wallet/${address}/refresh`, { method: 'POST' })
+  const json = await res.json()
+  if (res.status === 429) {
+    throw new Error(`Wait ${Math.ceil((json.retryAfterMs ?? 30000) / 1000)}s before refreshing again`)
+  }
+  if (!json.success) throw new Error(json.error ?? 'Failed to refresh wallet')
+  return {
+    wallet: json.wallet,
+    snapshotUpdatedAt: json.snapshotUpdatedAt ?? null,
+  }
 }
 
 export async function fetchTransactions(

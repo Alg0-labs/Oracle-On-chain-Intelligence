@@ -19,13 +19,13 @@ export function Marquee() {
     <div
       className="marquee-wrap"
       style={{
-        overflow:      'hidden',
-        borderTop:     '1px solid var(--border)',
-        borderBottom:  '1px solid var(--border)',
-        background:    'rgba(10,13,22,0.7)',
-        padding:       '15px 0',
-        position:      'relative',
-        zIndex:        1,
+        overflow:     'hidden',
+        borderTop:    '1px solid var(--border)',
+        borderBottom: '1px solid var(--border)',
+        background:   'var(--bg2)',
+        padding:      '15px 0',
+        position:     'relative',
+        zIndex:       1,
       }}
       onMouseEnter={e => {
         const track = e.currentTarget.querySelector('.marquee-track') as HTMLElement | null

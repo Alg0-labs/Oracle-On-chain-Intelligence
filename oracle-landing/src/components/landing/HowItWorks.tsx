@@ -236,14 +236,14 @@ function ChatDemo({ messages }: { messages: Message[] }) {
                 background:
                   m.role === 'user'
                     ? 'rgba(124,109,250,0.13)'
-                    : 'rgba(255,255,255,0.04)',
+                    : 'var(--bubble-ai-bg)',
                 border:
                   m.role === 'user'
                     ? '1px solid rgba(124,109,250,0.23)'
-                    : '1px solid rgba(255,255,255,0.06)',
-                color:       m.role === 'user' ? 'var(--text)' : '#C8C6E0',
-                whiteSpace:  'pre-wrap',
-                fontFamily:  'var(--font-mono)',
+                    : '1px solid var(--bubble-ai-border)',
+                color:      'var(--text)',
+                whiteSpace: 'pre-wrap',
+                fontFamily: 'var(--font-mono)',
               }}
             >
               {m.text}
@@ -255,18 +255,18 @@ function ChatDemo({ messages }: { messages: Message[] }) {
       {/* Input bar */}
       <div
         style={{
-          display:     'flex',
-          gap:         10,
-          padding:     '13px 18px',
-          borderTop:   '1px solid var(--border)',
-          background:  'rgba(0,0,0,0.18)',
+          display:    'flex',
+          gap:        10,
+          padding:    '13px 18px',
+          borderTop:  '1px solid var(--border)',
+          background: 'var(--bubble-ai-bg)',
         }}
       >
         <div
           style={{
             flex:        1,
-            background:  'rgba(255,255,255,0.04)',
-            border:      '1px solid rgba(255,255,255,0.06)',
+            background:  'var(--bubble-input-bg)',
+            border:      '1px solid var(--bubble-input-border)',
             borderRadius: 6,
             padding:     '9px 13px',
             fontSize:    12,
