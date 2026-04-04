@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
 export function Cursor() {
-  const cursorRef = useRef<HTMLDivElement>(null)
-  const ringRef   = useRef<HTMLDivElement>(null)
+  const dotRef  = useRef<HTMLDivElement>(null)
+  const ringRef = useRef<HTMLDivElement>(null)
   const [hovered, setHovered] = useState(false)
   const [isTouch, setIsTouch] = useState(false)
 
@@ -12,6 +12,7 @@ export function Cursor() {
 
   useEffect(() => {
     if (isTouch) return
+
     let mx = 0, my = 0
     let rx = 0, ry = 0
     let raf: number
@@ -19,15 +20,15 @@ export function Cursor() {
     const onMove = (e: MouseEvent) => {
       mx = e.clientX
       my = e.clientY
-      if (cursorRef.current) {
-        cursorRef.current.style.left = mx + 'px'
-        cursorRef.current.style.top  = my + 'px'
+      if (dotRef.current) {
+        dotRef.current.style.left = mx + 'px'
+        dotRef.current.style.top  = my + 'px'
       }
     }
 
     const animate = () => {
-      rx += (mx - rx) * 0.12
-      ry += (my - ry) * 0.12
+      rx += (mx - rx) * 0.1
+      ry += (my - ry) * 0.1
       if (ringRef.current) {
         ringRef.current.style.left = rx + 'px'
         ringRef.current.style.top  = ry + 'px'
@@ -38,16 +39,27 @@ export function Cursor() {
     const onEnter = () => setHovered(true)
     const onLeave = () => setHovered(false)
 
+    const addListeners = () => {
+      document.querySelectorAll('a, button').forEach(el => {
+        el.removeEventListener('mouseenter', onEnter)
+        el.removeEventListener('mouseleave', onLeave)
+        el.addEventListener('mouseenter', onEnter)
+        el.addEventListener('mouseleave', onLeave)
+      })
+    }
+
     document.addEventListener('mousemove', onMove)
-    document.querySelectorAll('a, button').forEach(el => {
-      el.addEventListener('mouseenter', onEnter)
-      el.addEventListener('mouseleave', onLeave)
-    })
+    addListeners()
+
+    const mo = new MutationObserver(addListeners)
+    mo.observe(document.body, { childList: true, subtree: true })
+
     raf = requestAnimationFrame(animate)
 
     return () => {
       document.removeEventListener('mousemove', onMove)
       cancelAnimationFrame(raf)
+      mo.disconnect()
     }
   }, [isTouch])
 
@@ -55,31 +67,37 @@ export function Cursor() {
 
   return (
     <>
+      {/* Small center dot */}
       <div
-        ref={cursorRef}
+        ref={dotRef}
         style={{
-          position: 'fixed',
-          width:  hovered ? 20 : 12,
-          height: hovered ? 20 : 12,
-          background: hovered ? 'var(--accent2)' : 'var(--accent)',
-          borderRadius: '50%',
+          position:      'fixed',
+          width:         hovered ? 14 : 8,
+          height:        hovered ? 14 : 8,
+          background:    hovered ? 'var(--accent2)' : 'var(--accent)',
+          borderRadius:  '50%',
           pointerEvents: 'none',
-          zIndex: 9999,
-          transform: 'translate(-50%, -50%)',
-          transition: 'width 0.2s, height 0.2s, background 0.2s',
-          mixBlendMode: 'screen',
+          zIndex:        9999,
+          transform:     'translate(-50%, -50%)',
+          transition:    'width 0.2s ease, height 0.2s ease, background 0.2s ease',
+          mixBlendMode:  'screen',
+          willChange:    'left, top',
         }}
       />
+      {/* Lagging ring */}
       <div
         ref={ringRef}
         style={{
-          position: 'fixed',
-          width: 36, height: 36,
-          border: '1px solid rgba(124,109,250,0.5)',
-          borderRadius: '50%',
+          position:      'fixed',
+          width:         hovered ? 40 : 30,
+          height:        hovered ? 40 : 30,
+          border:        `1px solid ${hovered ? 'rgba(167,139,250,0.65)' : 'rgba(124,109,250,0.4)'}`,
+          borderRadius:  '50%',
           pointerEvents: 'none',
-          zIndex: 9998,
-          transform: 'translate(-50%, -50%)',
+          zIndex:        9998,
+          transform:     'translate(-50%, -50%)',
+          transition:    'width 0.3s ease, height 0.3s ease, border-color 0.3s ease',
+          willChange:    'left, top',
         }}
       />
     </>

@@ -1,4 +1,3 @@
-import React from 'react'
 import styles from './Hero.module.css'
 
 export function Hero() {
@@ -22,17 +21,21 @@ export function Hero() {
         </p>
 
         <div className={styles.actions}>
+          <a href="https://app.oracleprotocol.online" className={styles.btnPrimary}>
+            Connect Wallet →
+          </a>
           <a href="#how-it-works" className={styles.btnGhost}>
             <PlayIcon />
             See how it works
           </a>
         </div>
 
-        {/* <div className={styles.stats}>
-          <Stat value="" label="WALLETS ANALYZED" />
-          <Stat value=""   label="CHAINS SUPPORTED" />
-          <Stat value="" label="UPTIME" />
-        </div> */}
+        {/* Stats row */}
+        <div className={styles.stats}>
+          <Stat value="$2.4B+" label="WALLETS ANALYZED" />
+          <Stat value="12+"    label="CHAINS SUPPORTED" />
+          <Stat value="99.9%"  label="UPTIME" />
+        </div>
       </div>
 
       <div className={styles.right}>
@@ -45,16 +48,16 @@ export function Hero() {
 
 function Stat({ value, label }: { value: string; label: string }) {
   return (
-    <div>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: 28, fontWeight: 800, color: 'var(--text)' }}>{value}</div>
-      <div style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: 2, marginTop: 4 }}>{label}</div>
+    <div className={styles.stat}>
+      <div className={styles.statValue}>{value}</div>
+      <div className={styles.statLabel}>{label}</div>
     </div>
   )
 }
 
 function PlayIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
       <circle cx="8" cy="8" r="7" stroke="currentColor" strokeWidth="1" />
       <polygon points="6.5,5 11.5,8 6.5,11" fill="currentColor" />
     </svg>
@@ -69,10 +72,24 @@ function WalletIllustration() {
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={styles.svg}
+      aria-hidden="true"
     >
-      {/* Dashed orbit rings */}
-      <circle cx="260" cy="240" r="200" stroke="rgba(124,109,250,0.07)" strokeWidth="1" strokeDasharray="4 8" />
-      <circle cx="260" cy="240" r="155" stroke="rgba(124,109,250,0.1)"  strokeWidth="1" strokeDasharray="2 6" />
+      {/* Outer dashed orbit ring */}
+      <circle
+        cx="260" cy="240" r="200"
+        stroke="rgba(124,109,250,0.06)"
+        strokeWidth="1"
+        strokeDasharray="4 8"
+        style={{ transformOrigin: '260px 240px', animation: 'spin-slow 24s linear infinite' }}
+      />
+      {/* Inner dashed orbit ring */}
+      <circle
+        cx="260" cy="240" r="155"
+        stroke="rgba(124,109,250,0.09)"
+        strokeWidth="1"
+        strokeDasharray="2 6"
+        style={{ transformOrigin: '260px 240px', animation: 'spin-slow 18s linear infinite reverse' }}
+      />
 
       {/* Spinning accent arc */}
       <circle
@@ -83,82 +100,117 @@ function WalletIllustration() {
         style={{ transformOrigin: '260px 240px', animation: 'spin-slow 12s linear infinite' }}
       />
 
-      {/* Central wallet card */}
-      <rect x="155" y="165" width="210" height="150" rx="14"
-        fill="#0E1220" stroke="rgba(124,109,250,0.3)" strokeWidth="1" />
-      <rect x="155" y="165" width="210" height="42" rx="14"
-        fill="rgba(124,109,250,0.1)" />
-      <rect x="155" y="193" width="210" height="14"
-        fill="rgba(124,109,250,0.08)" />
+      {/* Central wallet card body */}
+      <rect x="150" y="162" width="220" height="155" rx="14"
+        fill="#0D1120" stroke="rgba(124,109,250,0.28)" strokeWidth="1" />
+      {/* Card header band */}
+      <rect x="150" y="162" width="220" height="44" rx="14"
+        fill="rgba(124,109,250,0.09)" />
+      <rect x="150" y="192" width="220" height="14"
+        fill="rgba(124,109,250,0.06)" />
 
-      {/* Chip */}
-      <rect x="174" y="175" width="30" height="22" rx="4"
-        fill="rgba(124,109,250,0.35)" stroke="rgba(124,109,250,0.6)" strokeWidth="0.5" />
-      <line x1="180" y1="175" x2="180" y2="197" stroke="rgba(124,109,250,0.3)" strokeWidth="0.5" />
-      <line x1="186" y1="175" x2="186" y2="197" stroke="rgba(124,109,250,0.3)" strokeWidth="0.5" />
-      <line x1="192" y1="175" x2="192" y2="197" stroke="rgba(124,109,250,0.3)" strokeWidth="0.5" />
-      <line x1="174" y1="185" x2="204" y2="185" stroke="rgba(124,109,250,0.3)" strokeWidth="0.5" />
+      {/* SIM chip */}
+      <rect x="170" y="173" width="32" height="23" rx="4"
+        fill="rgba(124,109,250,0.32)" stroke="rgba(124,109,250,0.55)" strokeWidth="0.5" />
+      <line x1="176" y1="173" x2="176" y2="196" stroke="rgba(124,109,250,0.28)" strokeWidth="0.5" />
+      <line x1="182" y1="173" x2="182" y2="196" stroke="rgba(124,109,250,0.28)" strokeWidth="0.5" />
+      <line x1="188" y1="173" x2="188" y2="196" stroke="rgba(124,109,250,0.28)" strokeWidth="0.5" />
+      <line x1="170" y1="183" x2="202" y2="183" stroke="rgba(124,109,250,0.28)" strokeWidth="0.5" />
 
-      {/* Card content */}
-      <rect x="174" y="225" width="125" height="6" rx="3" fill="rgba(255,255,255,0.15)" />
-      <rect x="174" y="240" width="85"  height="5" rx="2.5" fill="rgba(255,255,255,0.08)" />
-      <rect x="174" y="268" width="54"  height="5" rx="2.5" fill="rgba(255,255,255,0.08)" />
-      <rect x="298" y="268" width="42"  height="5" rx="2.5" fill="rgba(52,211,153,0.5)" />
-      <text x="322" y="200" fontSize="24" fill="rgba(124,109,250,0.7)" fontFamily="serif">Ξ</text>
+      {/* ETH symbol */}
+      <text x="318" y="197" fontSize="26" fill="rgba(124,109,250,0.65)" fontFamily="serif">Ξ</text>
 
-      {/* Floating node: Net Worth */}
-      <g transform="translate(55,105)">
-        <rect width="96" height="56" rx="8" fill="#0C1018" stroke="rgba(124,109,250,0.25)" strokeWidth="1" />
-        <text x="10" y="17" fontSize="8"  fill="rgba(124,109,250,0.7)" fontFamily="monospace" letterSpacing="1">NET WORTH</text>
-        <text x="10" y="36" fontSize="16" fill="#E8E6FF" fontFamily="Syne, sans-serif" fontWeight="700">$48,320</text>
-        <text x="10" y="50" fontSize="9"  fill="rgba(52,211,153,0.9)" fontFamily="monospace">▲ +2.4%</text>
+      {/* Card data rows */}
+      <rect x="170" y="222" width="130" height="6" rx="3" fill="rgba(255,255,255,0.14)" />
+      <rect x="170" y="238" width="90"  height="5" rx="2" fill="rgba(255,255,255,0.07)" />
+      <rect x="170" y="268" width="56"  height="5" rx="2" fill="rgba(255,255,255,0.07)" />
+      <rect x="296" y="268" width="44"  height="5" rx="2" fill="rgba(52,211,153,0.48)" />
+
+      {/* ── Floating data nodes ── */}
+
+      {/* Net Worth node — top left */}
+      <g transform="translate(46,96)">
+        <rect width="104" height="60" rx="8"
+          fill="#0C1018" stroke="rgba(124,109,250,0.22)" strokeWidth="1" />
+        <text x="10" y="18" fontSize="8"  fill="rgba(124,109,250,0.65)"
+          fontFamily="monospace" letterSpacing="1">NET WORTH</text>
+        <text x="10" y="38" fontSize="17" fill="#E8E6FF"
+          fontFamily="Syne, sans-serif" fontWeight="700">$48,320</text>
+        <text x="10" y="54" fontSize="9"  fill="rgba(52,211,153,0.85)"
+          fontFamily="monospace">▲ +2.4%</text>
       </g>
 
-      {/* Floating node: Risk */}
-      <g transform="translate(368,90)">
-        <rect width="84" height="56" rx="8" fill="#0C1018" stroke="rgba(245,158,11,0.25)" strokeWidth="1" />
-        <text x="10" y="17" fontSize="8"  fill="rgba(245,158,11,0.7)" fontFamily="monospace" letterSpacing="1">RISK</text>
-        <text x="10" y="36" fontSize="15" fill="#F59E0B" fontFamily="Syne, sans-serif" fontWeight="700">MEDIUM</text>
-        <rect x="10" y="42" width="44" height="4" rx="2" fill="rgba(245,158,11,0.15)" />
-        <rect x="10" y="42" width="28" height="4" rx="2" fill="rgba(245,158,11,0.6)" />
+      {/* Risk node — top right */}
+      <g transform="translate(370,82)">
+        <rect width="90" height="60" rx="8"
+          fill="#0C1018" stroke="rgba(245,158,11,0.22)" strokeWidth="1" />
+        <text x="10" y="18" fontSize="8"  fill="rgba(245,158,11,0.65)"
+          fontFamily="monospace" letterSpacing="1">RISK LEVEL</text>
+        <text x="10" y="38" fontSize="15" fill="#F59E0B"
+          fontFamily="Syne, sans-serif" fontWeight="700">MEDIUM</text>
+        <rect x="10" y="44" width="48" height="4" rx="2"
+          fill="rgba(245,158,11,0.12)" />
+        <rect x="10" y="44" width="30" height="4" rx="2"
+          fill="rgba(245,158,11,0.55)" />
       </g>
 
-      {/* Floating node: ETH */}
-      <g transform="translate(368,320)">
-        <rect width="90" height="56" rx="8" fill="#0C1018" stroke="rgba(98,126,234,0.3)" strokeWidth="1" />
-        <text x="10" y="17" fontSize="8"  fill="rgba(98,126,234,0.8)" fontFamily="monospace" letterSpacing="1">ETH BALANCE</text>
-        <text x="10" y="36" fontSize="15" fill="#E8E6FF" fontFamily="Syne, sans-serif" fontWeight="700">12.4 Ξ</text>
-        <text x="10" y="50" fontSize="9"  fill="rgba(248,113,113,0.8)" fontFamily="monospace">▼ -3.2%</text>
+      {/* ETH Balance node — bottom right */}
+      <g transform="translate(372,324)">
+        <rect width="96" height="60" rx="8"
+          fill="#0C1018" stroke="rgba(98,126,234,0.28)" strokeWidth="1" />
+        <text x="10" y="18" fontSize="8"  fill="rgba(98,126,234,0.75)"
+          fontFamily="monospace" letterSpacing="1">ETH BALANCE</text>
+        <text x="10" y="38" fontSize="15" fill="#E8E6FF"
+          fontFamily="Syne, sans-serif" fontWeight="700">12.4 Ξ</text>
+        <text x="10" y="54" fontSize="9"  fill="rgba(248,113,113,0.75)"
+          fontFamily="monospace">▼ -3.2%</text>
       </g>
 
-      {/* Floating node: AI thinking */}
-      <g transform="translate(50,318)">
-        <rect width="98" height="48" rx="8" fill="rgba(124,109,250,0.1)" stroke="rgba(124,109,250,0.3)" strokeWidth="1" />
-        <text x="10" y="16" fontSize="9"  fill="rgba(124,109,250,0.8)" fontFamily="monospace">ØRACLE</text>
-        <text x="10" y="32" fontSize="10" fill="#C8C6E0" fontFamily="monospace">Analyzing...</text>
-        <circle cx="12" cy="41" r="2.5" fill="rgba(124,109,250,0.8)" style={{ animation: 'blink 1.2s 0s infinite' }} />
-        <circle cx="21" cy="41" r="2.5" fill="rgba(124,109,250,0.8)" style={{ animation: 'blink 1.2s 0.2s infinite' }} />
-        <circle cx="30" cy="41" r="2.5" fill="rgba(124,109,250,0.8)" style={{ animation: 'blink 1.2s 0.4s infinite' }} />
+      {/* AI thinking node — bottom left */}
+      <g transform="translate(42,320)">
+        <rect width="104" height="52" rx="8"
+          fill="rgba(124,109,250,0.09)" stroke="rgba(124,109,250,0.28)" strokeWidth="1" />
+        <text x="10" y="18" fontSize="9"  fill="rgba(124,109,250,0.75)"
+          fontFamily="monospace" letterSpacing="1">ØRACLE</text>
+        <text x="10" y="34" fontSize="10" fill="#C8C6E0"
+          fontFamily="monospace">Analyzing...</text>
+        <circle cx="12" cy="45" r="2.5" fill="rgba(124,109,250,0.75)"
+          style={{ animation: 'blink 1.2s 0s infinite' }} />
+        <circle cx="22" cy="45" r="2.5" fill="rgba(124,109,250,0.75)"
+          style={{ animation: 'blink 1.2s 0.2s infinite' }} />
+        <circle cx="32" cy="45" r="2.5" fill="rgba(124,109,250,0.75)"
+          style={{ animation: 'blink 1.2s 0.4s infinite' }} />
       </g>
 
       {/* Connector dashes */}
-      <line x1="155" y1="218" x2="151" y2="133" stroke="rgba(124,109,250,0.18)" strokeWidth="1" strokeDasharray="4 4" />
-      <line x1="365" y1="208" x2="368" y2="118" stroke="rgba(245,158,11,0.18)"  strokeWidth="1" strokeDasharray="4 4" />
-      <line x1="365" y1="272" x2="368" y2="348" stroke="rgba(98,126,234,0.18)"  strokeWidth="1" strokeDasharray="4 4" />
-      <line x1="155" y1="272" x2="148" y2="342" stroke="rgba(124,109,250,0.18)" strokeWidth="1" strokeDasharray="4 4" />
+      <line x1="150" y1="214" x2="150" y2="128" stroke="rgba(124,109,250,0.15)" strokeWidth="1" strokeDasharray="4 4" />
+      <line x1="370" y1="204" x2="416" y2="115" stroke="rgba(245,158,11,0.15)"  strokeWidth="1" strokeDasharray="4 4" />
+      <line x1="370" y1="274" x2="418" y2="352" stroke="rgba(98,126,234,0.15)"  strokeWidth="1" strokeDasharray="4 4" />
+      <line x1="150" y1="274" x2="146" y2="344" stroke="rgba(124,109,250,0.15)" strokeWidth="1" strokeDasharray="4 4" />
 
-      {/* Pulse rings */}
-      <circle cx="260" cy="240" r="22" stroke="rgba(124,109,250,0.4)" strokeWidth="1"
+      {/* Pulse rings from center */}
+      <circle cx="260" cy="240" r="24"
+        stroke="rgba(124,109,250,0.38)" strokeWidth="1"
         style={{ transformOrigin: '260px 240px', animation: 'pulse-ring 2.2s ease-out infinite' }} />
-      <circle cx="260" cy="240" r="22" stroke="rgba(124,109,250,0.2)" strokeWidth="1"
-        style={{ transformOrigin: '260px 240px', animation: 'pulse-ring 2.2s 0.7s ease-out infinite' }} />
+      <circle cx="260" cy="240" r="24"
+        stroke="rgba(124,109,250,0.18)" strokeWidth="1"
+        style={{ transformOrigin: '260px 240px', animation: 'pulse-ring 2.2s 0.75s ease-out infinite' }} />
 
       {/* Ambient particles */}
-      <circle cx="205" cy="138" r="2.5" fill="rgba(124,109,250,0.5)" style={{ animation: 'blink 3.2s 0.5s infinite' }} />
-      <circle cx="315" cy="152" r="2"   fill="rgba(56,189,248,0.5)"  style={{ animation: 'blink 2.5s 1.1s infinite' }} />
-      <circle cx="345" cy="298" r="2.5" fill="rgba(52,211,153,0.5)"  style={{ animation: 'blink 3.5s 0.2s infinite' }} />
-      <circle cx="168" cy="308" r="2"   fill="rgba(245,158,11,0.5)"  style={{ animation: 'blink 2.1s 0.8s infinite' }} />
-      <circle cx="258" cy="118" r="2.5" fill="rgba(124,109,250,0.4)" style={{ animation: 'blink 4s 0.3s infinite' }} />
+      <circle cx="205" cy="135" r="2.5" fill="rgba(124,109,250,0.45)"
+        style={{ animation: 'blink 3.2s 0.5s infinite' }} />
+      <circle cx="318" cy="148" r="2"   fill="rgba(56,189,248,0.45)"
+        style={{ animation: 'blink 2.5s 1.1s infinite' }} />
+      <circle cx="348" cy="302" r="2.5" fill="rgba(52,211,153,0.45)"
+        style={{ animation: 'blink 3.5s 0.2s infinite' }} />
+      <circle cx="166" cy="310" r="2"   fill="rgba(245,158,11,0.45)"
+        style={{ animation: 'blink 2.1s 0.8s infinite' }} />
+      <circle cx="260" cy="112" r="2.5" fill="rgba(124,109,250,0.35)"
+        style={{ animation: 'blink 4s 0.3s infinite' }} />
+      <circle cx="188" cy="385" r="2"   fill="rgba(56,189,248,0.35)"
+        style={{ animation: 'blink 3.1s 1.4s infinite' }} />
+      <circle cx="340" cy="178" r="2"   fill="rgba(52,211,153,0.35)"
+        style={{ animation: 'blink 2.8s 0.7s infinite' }} />
 
       <defs>
         <linearGradient id="heroGrad" x1="0%" y1="0%" x2="100%" y2="0%">
