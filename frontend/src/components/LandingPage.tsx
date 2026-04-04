@@ -11,13 +11,83 @@ const EVM_CHAINS = [
 ]
 
 const FEATURES = [
-  { icon: '⬡', title: 'Cross-chain Balances', desc: 'ETH, ERC-20, and native tokens across 7+ chains in one view.' },
-  { icon: '↑↓', title: 'Transaction Intel', desc: 'Every swap, send, and contract call decoded with context.' },
-  { icon: '◎', title: 'Risk Analysis', desc: 'Concentration risk, stablecoin ratio, and exposure breakdown.' },
-  { icon: '✦', title: 'AI Chat', desc: 'Ask anything about your wallet in plain English.' },
-  { icon: '→', title: 'Send ETH & ERC-20', desc: 'Type "send 50 USDC to 0x…" — Oracle builds and sends the tx.' },
-  { icon: '▦', title: 'Market Intelligence', desc: 'Fear & Greed index, news sentiment, and macro context.' },
+  {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5" opacity=".5"/>
+        <path d="M8 1.5 A6.5 6.5 0 0 1 14.5 8 L8 8 Z" fill="currentColor"/>
+      </svg>
+    ),
+    title: 'Multi-Chain Portfolio',
+    desc: 'All assets across 7 EVM chains in one unified view.',
+  },
+  {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <rect x="1" y="2" width="14" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M4 14 L4 11 L7 11 Z" fill="currentColor"/>
+        <circle cx="5" cy="7" r="1" fill="currentColor"/>
+        <circle cx="8" cy="7" r="1" fill="currentColor"/>
+        <circle cx="11" cy="7" r="1" fill="currentColor"/>
+      </svg>
+    ),
+    title: 'Natural Language AI',
+    desc: "Ask anything about your wallet in plain English.",
+  },
+  {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M3 5 L13 5 M10 2 L13 5 L10 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M13 11 L3 11 M6 8 L3 11 L6 14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Intent-Based Transfers',
+    desc: 'Say "send 50 USDC to vitalik.eth" — ØRACLE handles the rest.',
+  },
+  {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M1.5 11.5 L5 7.5 L7.5 10 L11 5.5 L14.5 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <circle cx="14.5" cy="8" r="1" fill="currentColor"/>
+      </svg>
+    ),
+    title: 'Market Intelligence',
+    desc: 'Fear & Greed index, news sentiment, and macro context.',
+  },
+  {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <path d="M8 2 L14 5 L14 9 C14 12.3 11.3 15.3 8 16 C4.7 15.3 2 12.3 2 9 L2 5 Z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
+        <path d="M6 8 L7.5 9.5 L10.5 6.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Risk Analysis',
+    desc: 'Wallet risk scoring with concentration and exposure breakdown.',
+  },
+  {
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="6.5" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M8 4.5 L8 8 L10.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+    ),
+    title: 'Transaction History',
+    desc: 'Full on-chain timeline across all chains, decoded.',
+  },
 ]
+
+// Sun / Moon icons matching Sidebar
+const SunIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <circle cx="8" cy="8" r="3" stroke="currentColor" strokeWidth="1.5"/>
+    <path d="M8 1.5V3M8 13V14.5M14.5 8H13M3 8H1.5M12.4 3.6L11.3 4.7M4.7 11.3L3.6 12.4M12.4 12.4L11.3 11.3M4.7 4.7L3.6 3.6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+)
+const MoonIcon = () => (
+  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+    <path d="M13.5 9A5.5 5.5 0 0 1 7 2.5c0-.28.02-.56.06-.83A6.5 6.5 0 1 0 13.83 9.44 5.5 5.5 0 0 1 13.5 9Z" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+  </svg>
+)
 
 interface Props {
   onConnect: () => void
@@ -28,50 +98,70 @@ export function LandingPage({ onConnect }: Props) {
 
   return (
     <div style={root}>
-      {/* Nav */}
+
+      {/* ── Nav ── */}
       <nav style={nav}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <span style={{ fontSize: 18, fontWeight: 700, color: '#6366F1', letterSpacing: '-0.02em' }}>Ø</span>
-          <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em' }}>RACLE</span>
+        {/* Logo — mirrors Sidebar logo zone */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--accent)', letterSpacing: '-0.02em', lineHeight: 1 }}>Ø</span>
+          <span style={{ fontSize: 18, fontWeight: 700, color: 'var(--text)', letterSpacing: '-0.02em', lineHeight: 1 }}>RACLE</span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <button onClick={toggle} style={themeBtn} title={theme === 'dark' ? 'Light mode' : 'Dark mode'}>
-            {theme === 'dark' ? '☀' : '☽'}
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {/* Theme toggle — same style as Sidebar's themeToggle */}
+          <button onClick={toggle} style={themeBtn} title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}>
+            <span style={{ display: 'flex', color: 'var(--text-4)' }}>
+              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+            </span>
+            <span style={{ fontSize: 12, color: 'var(--text-4)' }}>
+              {theme === 'dark' ? 'Light mode' : 'Dark mode'}
+            </span>
           </button>
-          <button style={navCta} onClick={onConnect}>Connect Wallet</button>
+
+          {/* CTA — matches dashboard's refreshTopBtn style */}
+          <button style={connectBtn} onClick={onConnect}>Connect Wallet →</button>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section style={hero}>
-        <div style={eyebrow}>On-chain intelligence</div>
+      {/* ── Body — centered, no scroll ── */}
+      <div style={body}>
 
-        <h1 style={heroH1}>
-          Your Wallet,<br />Explained.
+        {/* Eyebrow badge */}
+        <div style={eyebrow}>
+          <span style={eyebrowDot} />
+          ON-CHAIN INTELLIGENCE
+        </div>
+
+        {/* Headline */}
+        <h1 style={h1}>
+          Your wallet.<br />
+          <span style={h1Accent}>Understood.</span>
         </h1>
 
-        <p style={heroSub}>
-          Connect your wallet and instantly understand your entire on-chain footprint — balances, transactions, risk, and market context — with AI you can ask anything.
+        {/* Subtitle */}
+        <p style={sub}>
+          Connect your wallet and instantly understand your entire on-chain footprint —
+          balances, transactions, risk, and market context.
         </p>
 
+        {/* CTA */}
         <button style={heroCta} onClick={onConnect}>
           Connect Wallet →
         </button>
+        <p style={trustLine}>Non-custodial · Read-only until you send · No sign-up</p>
 
-        <p style={heroNote}>Non-custodial · Read-only until you send · No sign-up</p>
-
-        {/* Feature grid */}
+        {/* Feature grid — same card/border style as dashboard */}
         <div style={featureGrid}>
           {FEATURES.map((f, i) => (
             <div
               key={f.title}
               style={{
-                ...featureCell,
-                borderRight: (i + 1) % 3 === 0 ? 'none' : '1px solid var(--border)',
-                borderBottom: i < 3 ? '1px solid var(--border)' : 'none',
+                ...featureCard,
+                borderRight:  (i + 1) % 3 === 0 ? 'none' : `1px solid var(--border)`,
+                borderBottom: i < 3 ? `1px solid var(--border)` : 'none',
               }}
             >
-              <div style={featureIcon}>{f.icon}</div>
+              <span style={{ color: 'var(--accent)', display: 'flex', marginBottom: 8 }}>{f.icon}</span>
               <div style={featureTitle}>{f.title}</div>
               <p style={featureDesc}>{f.desc}</p>
             </div>
@@ -79,32 +169,26 @@ export function LandingPage({ onConnect }: Props) {
         </div>
 
         {/* Chain strip */}
-        <div style={chainLabel}>Supported networks</div>
         <div style={chainStrip}>
           {EVM_CHAINS.map((c, i) => (
-            <span key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              {i > 0 && <span style={chainDivider} />}
-              <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
-                <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.color, display: 'inline-block', flexShrink: 0 }} />
-                <span style={chainName}>{c.name}</span>
-              </span>
+            <span key={c.name} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              {i > 0 && <span style={{ width: 1, height: 10, background: 'var(--border-sub)', flexShrink: 0 }} />}
+              <span style={{ width: 6, height: 6, borderRadius: '50%', background: c.color, flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: 'var(--text-5)' }}>{c.name}</span>
             </span>
           ))}
         </div>
-      </section>
 
-      {/* Footer */}
-      <footer style={footer}>
-        © {new Date().getFullYear()} Oracle Protocol · Non-custodial · Your keys, your crypto
-      </footer>
+      </div>
     </div>
   )
 }
 
-// ── Styles ────────────────────────────────────────────────────────────────────
+// ── Styles — mirrors dashboard CSS variables ──────────────────────────────────
 
 const root: React.CSSProperties = {
-  minHeight: '100vh',
+  height: '100vh',
+  overflow: 'hidden',
   background: 'var(--bg)',
   color: 'var(--text)',
   fontFamily: 'Inter, system-ui, sans-serif',
@@ -113,175 +197,170 @@ const root: React.CSSProperties = {
   transition: 'background 0.2s ease, color 0.2s ease',
 }
 
+// Nav matches Sidebar logo zone: same height, border, bg
 const nav: React.CSSProperties = {
   display: 'flex',
   justifyContent: 'space-between',
   alignItems: 'center',
-  padding: '0 40px',
-  height: 60,
-  borderBottom: '1px solid var(--border)',
-  position: 'sticky',
-  top: 0,
-  background: 'var(--bg)',
-  zIndex: 10,
-  transition: 'background 0.2s ease',
+  padding: '0 24px',
+  height: 52,
+  flexShrink: 0,
+  borderBottom: '1px solid var(--sidebar-bd)',
+  background: 'var(--sidebar-bg)',
 }
 
+// Theme toggle matches Sidebar's themeToggle
 const themeBtn: React.CSSProperties = {
-  background: 'var(--bg-subtle)',
-  border: '1px solid var(--border)',
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  background: 'transparent',
+  border: 'none',
   borderRadius: 6,
-  width: 32, height: 32,
-  display: 'flex', alignItems: 'center', justifyContent: 'center',
-  cursor: 'pointer', fontSize: 14, color: 'var(--text-3)',
-  transition: 'all 0.15s',
+  padding: '7px 8px',
+  cursor: 'pointer',
+  color: 'var(--text-4)',
+  fontFamily: 'Inter, system-ui, sans-serif',
 }
 
-const navCta: React.CSSProperties = {
-  background: 'var(--accent-dim)',
-  color: '#fff',
+// Connect button matches refreshTopBtn from App
+const connectBtn: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'center',
+  gap: 6,
+  height: 32,
+  padding: '0 14px',
+  background: 'var(--accent)',
   border: 'none',
-  borderRadius: 8,
-  height: 36,
-  padding: '0 16px',
+  borderRadius: 6,
+  color: '#fff',
   fontSize: 13,
   fontWeight: 500,
   fontFamily: 'Inter, system-ui, sans-serif',
   cursor: 'pointer',
+  letterSpacing: '-0.01em',
 }
 
-const hero: React.CSSProperties = {
+const body: React.CSSProperties = {
+  flex: 1,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
+  justifyContent: 'center',
+  padding: '0 40px 24px',
   textAlign: 'center',
-  padding: '80px 40px 60px',
-  maxWidth: 720,
-  margin: '0 auto',
-  width: '100%',
+  overflow: 'hidden',
 }
 
+// Eyebrow pill — matches Sidebar's liveChip style
 const eyebrow: React.CSSProperties = {
-  fontSize: 11,
-  fontWeight: 600,
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  fontSize: 9,
+  fontWeight: 700,
   letterSpacing: '0.1em',
-  color: '#6366F1',
-  background: 'rgba(99,102,241,0.1)',
-  border: '1px solid rgba(99,102,241,0.2)',
+  color: 'var(--accent)',
+  background: 'var(--accent-glow)',
+  border: '1px solid var(--accent-bd)',
   borderRadius: 999,
-  padding: '4px 14px',
-  marginBottom: 24,
-  textTransform: 'uppercase' as const,
+  padding: '3px 12px',
+  marginBottom: 20,
 }
 
-const heroH1: React.CSSProperties = {
-  fontSize: 'clamp(36px, 5vw, 56px)',
+const eyebrowDot: React.CSSProperties = {
+  width: 5,
+  height: 5,
+  borderRadius: '50%',
+  background: 'var(--accent)',
+  flexShrink: 0,
+  animation: 'pulse-dot 2s ease-in-out infinite',
+}
+
+const h1: React.CSSProperties = {
+  fontSize: 'clamp(32px, 4.5vw, 52px)',
   fontWeight: 600,
   color: 'var(--text)',
   letterSpacing: '-0.03em',
   lineHeight: 1.1,
-  marginBottom: 20,
+  marginBottom: 16,
 }
 
-const heroSub: React.CSSProperties = {
-  fontSize: 17,
+const h1Accent: React.CSSProperties = {
+  background: 'linear-gradient(135deg, var(--accent) 0%, #A78BFA 100%)',
+  WebkitBackgroundClip: 'text',
+  WebkitTextFillColor: 'transparent',
+  backgroundClip: 'text',
+}
+
+const sub: React.CSSProperties = {
+  fontSize: 15,
   color: 'var(--text-4)',
   lineHeight: 1.65,
-  maxWidth: 480,
-  marginBottom: 32,
+  maxWidth: 460,
+  marginBottom: 24,
 }
 
 const heroCta: React.CSSProperties = {
-  background: 'var(--accent-dim)',
+  background: 'var(--accent)',
   color: '#fff',
   border: 'none',
   borderRadius: 8,
-  height: 44,
-  padding: '0 28px',
-  fontSize: 15,
+  height: 40,
+  padding: '0 24px',
+  fontSize: 14,
   fontWeight: 500,
   fontFamily: 'Inter, system-ui, sans-serif',
   cursor: 'pointer',
-  marginBottom: 14,
-  boxShadow: '0 0 32px rgba(99,102,241,0.25)',
+  marginBottom: 10,
+  boxShadow: '0 0 24px var(--accent-glow)',
 }
 
-const heroNote: React.CSSProperties = {
-  fontSize: 12,
+const trustLine: React.CSSProperties = {
+  fontSize: 11,
   color: 'var(--text-5)',
-  marginBottom: 60,
+  marginBottom: 28,
 }
 
+// Feature grid — mirrors dashboard overview stat grid: bg-card + border + radius-8
 const featureGrid: React.CSSProperties = {
   display: 'grid',
   gridTemplateColumns: 'repeat(3, 1fr)',
   width: '100%',
-  marginBottom: 48,
+  maxWidth: 680,
+  marginBottom: 24,
+  background: 'var(--bg-card)',
   border: '1px solid var(--border)',
-  borderRadius: 10,
+  borderRadius: 8,
   overflow: 'hidden',
 }
 
-const featureCell: React.CSSProperties = {
-  padding: '22px 20px',
-  background: 'var(--bg-subtle)',
+const featureCard: React.CSSProperties = {
+  padding: '16px 18px',
+  background: 'var(--bg-card)',
   textAlign: 'left',
 }
 
-const featureIcon: React.CSSProperties = {
-  fontSize: 16,
-  color: '#6366F1',
-  marginBottom: 10,
-  fontFamily: 'monospace',
-}
-
+// Label style matches dashboard's `lbl` — 9px uppercase tracking
 const featureTitle: React.CSSProperties = {
-  fontSize: 13,
+  fontSize: 11,
   fontWeight: 600,
   color: 'var(--text)',
-  marginBottom: 6,
+  marginBottom: 4,
   letterSpacing: '-0.01em',
 }
 
 const featureDesc: React.CSSProperties = {
-  fontSize: 12,
-  color: 'var(--text-4)',
-  lineHeight: 1.6,
-  margin: 0,
-}
-
-const chainLabel: React.CSSProperties = {
   fontSize: 11,
   color: 'var(--text-5)',
-  letterSpacing: '0.06em',
-  textTransform: 'uppercase' as const,
-  marginBottom: 14,
+  lineHeight: 1.55,
+  margin: 0,
 }
 
 const chainStrip: React.CSSProperties = {
   display: 'flex',
   alignItems: 'center',
-  flexWrap: 'wrap' as const,
+  gap: 10,
+  flexWrap: 'wrap',
   justifyContent: 'center',
-  gap: 4,
-}
-
-const chainDivider: React.CSSProperties = {
-  width: 1,
-  height: 10,
-  background: 'var(--border-sub)',
-}
-
-const chainName: React.CSSProperties = {
-  fontSize: 12,
-  color: 'var(--text-4)',
-}
-
-const footer: React.CSSProperties = {
-  textAlign: 'center',
-  padding: '24px',
-  fontSize: 11,
-  color: 'var(--text-6)',
-  marginTop: 'auto',
-  borderTop: '1px solid var(--border)',
 }
