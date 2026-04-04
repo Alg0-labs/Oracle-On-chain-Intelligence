@@ -128,6 +128,12 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
 
   return (
     <div style={pane}>
+      {/* Page header */}
+      <header style={{ height: 52, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0, background: 'var(--bg)', transition: 'background 0.2s ease' }}>
+        <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', margin: 0 }}>AI Assistant</h1>
+        <span style={{ fontSize: 11, color: 'var(--text-5)' }}>Wallet-aware · Context-rich</span>
+      </header>
+
       {/* Messages */}
       <div style={{ ...msgArea, padding: isMobile ? '16px 14px 8px' : '24px 24px 8px' }}>
         {messages.map(m => (
@@ -242,6 +248,8 @@ Ask me anything about your wallet. To send tokens:
 
 const pane: React.CSSProperties = {
   flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden',
+  background: 'var(--bg)',
+  transition: 'background 0.2s ease',
 }
 
 const msgArea: React.CSSProperties = {
@@ -249,19 +257,18 @@ const msgArea: React.CSSProperties = {
 }
 
 const userBubble: React.CSSProperties = {
-  background: 'rgba(99,102,241,0.12)',
+  background: 'rgba(99,102,241,0.1)',
   border: '1px solid rgba(99,102,241,0.2)',
   borderRadius: '12px 12px 3px 12px',
-  padding: '12px 16px', maxWidth: '88%',
-  backdropFilter: 'blur(8px)',
+  padding: '12px 16px', maxWidth: '72%',
 }
 
 const aiBubble: React.CSSProperties = {
-  background: 'var(--c-surface)',
-  border: '1px solid var(--c-ghost)',
+  background: 'var(--bg-card)',
+  border: '1px solid var(--border)',
   borderRadius: '12px 12px 12px 3px',
-  padding: '14px 18px', maxWidth: '92%',
-  backdropFilter: 'blur(8px)',
+  padding: '14px 18px', maxWidth: '76%',
+  transition: 'background 0.2s ease, border-color 0.2s ease',
 }
 
 const aiLabel: React.CSSProperties = {
@@ -311,38 +318,40 @@ const promptsRow: React.CSSProperties = {
 }
 
 const chip: React.CSSProperties = {
-  padding: '6px 14px',
-  background: 'var(--c-surface-2)',
-  border: '1px solid var(--c-ghost)',
-  borderRadius: 999,
-  color: 'var(--c-text-4)', fontSize: 11,
-  fontFamily: 'var(--font-data)', fontWeight: 500,
+  padding: '5px 12px',
+  background: 'transparent',
+  border: '1px solid #27272F',
+  borderRadius: 6,
+  color: '#71717A', fontSize: 11,
+  fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 400,
   cursor: 'pointer', transition: 'all 0.15s',
+  whiteSpace: 'nowrap' as const,
 }
 
 const inputRow: React.CSSProperties = {
-  display: 'flex', gap: 10, padding: '14px 20px',
-  borderTop: '1px solid var(--c-border-2)',
-  background: 'var(--c-input-bar)',
-  backdropFilter: 'blur(12px)',
+  display: 'flex', gap: 10, padding: '12px 20px',
+  borderTop: '1px solid var(--border)',
+  background: 'var(--bg-subtle)',
+  flexShrink: 0,
+  transition: 'background 0.2s ease, border-color 0.2s ease',
 }
 
 const inputStyle: React.CSSProperties = {
   flex: 1,
-  background: 'var(--c-surface)',
-  border: '1px solid var(--c-border-5)',
-  borderRadius: 10, padding: '12px 18px',
-  color: 'var(--c-text)', fontSize: 13,
-  fontFamily: 'var(--font-data)',
-  transition: 'border-color 0.15s, box-shadow 0.15s',
+  background: 'var(--bg-card)',
+  border: '1px solid var(--border-sub)',
+  borderRadius: 8, padding: '10px 16px',
+  color: 'var(--text)', fontSize: 14,
+  fontFamily: 'Inter, system-ui, sans-serif',
+  transition: 'border-color 0.15s, background 0.2s ease',
 }
 
 const sendBtn: React.CSSProperties = {
-  width: 44, height: 44,
-  background: 'linear-gradient(135deg, #6366F1, #8B5CF6)',
-  border: 'none', borderRadius: 10, color: '#fff',
-  fontSize: 18, cursor: 'pointer',
+  width: 40, height: 40,
+  background: 'var(--accent-dim)',
+  border: 'none', borderRadius: 8, color: '#fff',
+  fontSize: 16, cursor: 'pointer',
   display: 'flex', alignItems: 'center', justifyContent: 'center',
-  boxShadow: '0 0 20px rgba(99,102,241,0.3)',
-  transition: 'opacity 0.15s, box-shadow 0.15s',
+  flexShrink: 0,
+  transition: 'opacity 0.15s',
 }

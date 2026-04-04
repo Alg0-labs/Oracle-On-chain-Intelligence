@@ -296,6 +296,11 @@ export function PortfolioPanel({ wallet, market, isMobile = false }: Props) {
   }, [loadingMore, hasMore, nextCursor, wallet.address])
 
   return (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden', background: 'var(--bg)' }}>
+      {/* Page header */}
+      <header style={{ height: 52, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', padding: '0 24px', flexShrink: 0, background: 'var(--bg)' }}>
+        <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', margin: 0 }}>Portfolio</h1>
+      </header>
     <div style={panel}>
       <div style={{ ...twoCol, flexDirection: isMobile ? 'column' : 'row' }}>
 
@@ -449,21 +454,12 @@ export function PortfolioPanel({ wallet, market, isMobile = false }: Props) {
             </div>
           </div>
 
-          {/* Market Intelligence */}
-          {!market ? (
-            <div style={{ ...glassCard, color: 'var(--c-text-6)', fontSize: 12 }}>Loading market intelligence…</div>
-          ) : (
-            <>
-              <div style={glassCard}>
-                <div style={cardSectionLabel}>FEAR & GREED INDEX</div>
-                <FearGreedGauge value={market.fearGreed.value} label={market.fearGreed.label} />
-              </div>
-
-              <div style={{ ...cardSectionLabel, marginTop: 8 }}>LATEST MARKET NEWS</div>
-              {(market.latestNewsInsights ?? []).slice(0, 10).map(item => (
-                <NewsInsightCard key={item.id} item={item} />
-              ))}
-            </>
+          {/* Fear & Greed only — news moved to Market Intelligence page */}
+          {market && (
+            <div style={glassCard}>
+              <div style={cardSectionLabel}>FEAR & GREED INDEX</div>
+              <FearGreedGauge value={market.fearGreed.value} label={market.fearGreed.label} />
+            </div>
           )}
         </div>
       </div>
@@ -472,6 +468,7 @@ export function PortfolioPanel({ wallet, market, isMobile = false }: Props) {
       {selectedTx && (
         <TransactionDetailModal tx={selectedTx} onClose={() => setSelectedTx(null)} />
       )}
+    </div>
     </div>
   )
 }
@@ -532,7 +529,7 @@ function NewsInsightCard({ item }: { item: MarketNewsInsight }) {
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 
-const panel: CSSProperties = { flex: 1, overflowY: 'auto', padding: '20px 20px 40px' }
+const panel: CSSProperties = { flex: 1, overflowY: 'auto', padding: '20px 20px 40px', background: 'var(--bg)' }
 
 const twoCol: CSSProperties = {
   display: 'flex', gap: 20, alignItems: 'flex-start',
