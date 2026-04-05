@@ -1,6 +1,42 @@
-# ØRACLE — On-chain Intelligence
+# ØRACLE
 
-> AI-powered crypto wallet assistant. Connect your wallet, ask anything, send ETH — all from a single conversational interface.
+**On-chain intelligence, distilled.**
+
+ØRACLE is an AI intelligence layer for your crypto wallet. Connect once, ask anything in plain English, and understand everything — portfolio value, risk exposure, transaction history, and market context — from a single conversational interface.
+
+**[Launch App](https://app.oracleprotocol.online)** · **[Landing Page](https://oracleprotocol.online)** · **[Twitter / X](https://x.com/askoracleprtcl)**
+
+---
+
+## What it does
+
+- **Unified Net Worth** — Total portfolio value across ETH, ERC-20s, and DeFi positions, updated in real time.
+- **AI Chat Interface** — Ask questions about your wallet in plain English. Responses are grounded in your actual on-chain data, not generic answers.
+- **Risk Analysis** — Concentration scoring, stablecoin buffer analysis, and volatility exposure for your holdings.
+- **Transaction Intel** — Every transaction decoded into human-readable summaries. No more raw contract addresses.
+- **Market Intelligence** — Fear & Greed index, news sentiment, and macro context for your specific holdings.
+- **Send ETH via Chat** — Type your intent, review the preview, confirm with your wallet. Done in 10 seconds.
+
+Non-custodial. Read-only by default. No signup required.
+
+---
+
+## How sending works
+
+
+
+1. You type something like `send 0.5 ETH to vitalik.eth` in the chat
+2. The AI parses your intent and returns a structured transaction preview
+3. A confirmation modal appears with full details (amount, recipient, gas estimate)
+4. You click **Confirm & Send** — your wallet prompts you to sign
+5. Transaction hash and Etherscan link are shown on confirmation
+6. The chat logs the outcome automatically
+
+The backend never holds keys or signs transactions. All signing happens client-side through WalletConnect / Reown.
+
+
+
+
 
 ---
 
@@ -8,11 +44,11 @@
 
 ```
 oracle/
-├── frontend/          # React + Vite + TypeScript
+├── frontend/              # App — React + Vite + TypeScript
 │   └── src/
 │       ├── lib/
-│       │   ├── reown.ts      # WalletConnect / Reown AppKit setup
-│       │   └── api.ts        # Backend API client
+│       │   ├── reown.ts             # WalletConnect / Reown AppKit setup
+│       │   └── api.ts               # Backend API client
 │       ├── components/
 │       │   ├── ChatPanel.tsx         # AI chat interface
 │       │   ├── PortfolioPanel.tsx    # Holdings, allocation, risk
@@ -20,64 +56,98 @@ oracle/
 │       ├── types/index.ts
 │       └── App.tsx
 │
-└── backend/           # Express + TypeScript
-    └── src/
-        ├── services/
-        │   ├── wallet.service.ts   # Moralis + CoinGecko data fetching
-        │   └── ai.service.ts       # Claude AI with wallet context + tx intent parsing
-        ├── routes/index.ts
-        └── index.ts
+├── backend/               # API — Express + TypeScript + Prisma
+│   └── src/
+│       ├── services/
+│       │   ├── wallet.service.ts    # Moralis + CoinGecko data fetching
+│       │   └── ai.service.ts        # Claude AI with wallet context + tx intent
+│       ├── routes/index.ts
+│       └── index.ts
+│
+└── oracle-landing/        # Marketing site — React + Vite + Tailwind
+    └── src/components/landing/
 ```
 
 ---
 
-## Quick Start
+## Tech stack
 
-### 1. Get API Keys
 
-| Service | URL | Notes |
-|---------|-----|-------|
-| **Anthropic** | https://console.anthropic.com | Claude API |
-| **Moralis** | https://moralis.io | Wallet data (free tier available) |
-| **Etherscan** | https://etherscan.io/apis | Optional, for fallback |
-| **Reown** | https://cloud.reown.com | WalletConnect v3 (free) |
+| Layer             | Technology                         |
+| ----------------- | ---------------------------------- |
+| Frontend          | React 18 · TypeScript · Vite       |
+| Wallet connection | Reown AppKit v1 (WalletConnect v3) |
+| Chain interaction | Wagmi v2 · Viem                    |
+| AI                | Anthropic Claude Sonnet 4          |
+| Wallet data       | Moralis Deep Index API v2          |
+| Price data        | CoinGecko                          |
+| Backend           | Express · TypeScript · Prisma      |
+| Validation        | Zod                                |
+
 
 ---
 
-### 2. Backend Setup
+## Self-hosting
+
+### Prerequisites
+
+
+| Service       | URL                                                            | Notes                             |
+| ------------- | -------------------------------------------------------------- | --------------------------------- |
+| **Anthropic** | [https://console.anthropic.com](https://console.anthropic.com) | Claude API key                    |
+| **Moralis**   | [https://moralis.io](https://moralis.io)                       | Wallet data — free tier available |
+| **Etherscan** | [https://etherscan.io/apis](https://etherscan.io/apis)         | Optional, used as fallback        |
+| **Reown**     | [https://cloud.reown.com](https://cloud.reown.com)             | WalletConnect project ID — free   |
+
+
+### Environment variables
+
+**Backend** (`backend/.env`)
+
+```
+ANTHROPIC_API_KEY=sk-ant-...
+MORALIS_API_KEY=...
+ETHERSCAN_API_KEY=...          # optional
+FRONTEND_URL=http://localhost:5173
+PORT=3001
+```
+
+**Frontend** (`frontend/.env`)
+
+```
+VITE_REOWN_PROJECT_ID=...
+```
+
+### Running locally
 
 ```bash
-cd backend
-npm install
-cp .env.example .env
-# Fill in your keys in .env
-npm run dev
+# Start all services (backend + frontend + landing page)
+./dev.sh
+
+# Or start individually
+./dev.sh backend     # http://localhost:3001
+./dev.sh frontend    # http://localhost:5173
+./dev.sh landing     # landing page dev server
 ```
 
-Backend runs on **http://localhost:3001**
-
----
-
-### 3. Frontend Setup
+Or manually:
 
 ```bash
-cd frontend
-npm install
-cp .env.example .env
-# Add your VITE_REOWN_PROJECT_ID to .env
-npm run dev
-```
+# Backend
+cd backend && npm install && cp .env.example .env && npm run dev
 
-Frontend runs on **http://localhost:5173**
+# Frontend
+cd frontend && npm install && cp .env.example .env && npm run dev
+```
 
 ---
 
-## API Endpoints
+## API
 
 ### `GET /api/wallet/:address`
-Fetches live wallet data from Moralis.
 
-**Response:**
+Returns live wallet data for any Ethereum address.
+
 ```json
 {
   "success": true,
@@ -87,8 +157,8 @@ Fetches live wallet data from Moralis.
     "ethBalance": "1.234",
     "ethBalanceUsd": 3085.0,
     "netWorthUsd": 48320.0,
-    "tokens": [...],
-    "transactions": [...],
+    "tokens": [],
+    "transactions": [],
     "riskLevel": "MEDIUM",
     "riskReason": "ETH is 64% of portfolio..."
   }
@@ -96,20 +166,19 @@ Fetches live wallet data from Moralis.
 ```
 
 ### `POST /api/chat`
-Sends a message to the AI with live wallet context.
 
-**Request:**
+Sends a message to the AI with live wallet context. When the AI detects a transaction intent, it returns a `txIntent` object alongside the reply.
+
 ```json
+// Request
 {
   "address": "0x...",
   "messages": [
     { "role": "user", "content": "Send 0.1 ETH to 0xABCD..." }
   ]
 }
-```
 
-**Response:**
-```json
+// Response
 {
   "success": true,
   "reply": "Confirmed. Preparing to send 0.1 ETH to 0xABCD...",
@@ -122,49 +191,3 @@ Sends a message to the AI with live wallet context.
 }
 ```
 
-When `txIntent` is present, the frontend shows the **Send Confirmation Modal** which uses Wagmi + Reown to sign and broadcast the transaction.
-
----
-
-## How the Send ETH Flow Works
-
-1. User types `"send 0.5 ETH to 0x742d35Cc..."` in chat
-2. Backend AI detects intent → returns `txIntent` JSON alongside reply
-3. Frontend pops `SendConfirmModal` with full tx details
-4. User clicks **Confirm & Send**
-5. Reown/Wagmi calls `sendTransaction` → wallet prompts user to sign
-6. On confirmation, tx hash is shown with Etherscan link
-7. Chat records the outcome automatically
-
----
-
-## Tech Stack
-
-| Layer | Tech |
-|-------|------|
-| Frontend framework | React 18 + TypeScript + Vite |
-| Wallet connection | Reown AppKit v1 (WalletConnect v3) |
-| Chain interaction | Wagmi v2 + Viem |
-| AI | Anthropic Claude Sonnet 4 |
-| Wallet data | Moralis Deep Index API v2 |
-| Price data | CoinGecko public API |
-| Backend | Express + TypeScript |
-| Validation | Zod |
-
----
-
-## Environment Variables
-
-### Backend (`backend/.env`)
-```
-ANTHROPIC_API_KEY=sk-ant-...
-MORALIS_API_KEY=...
-ETHERSCAN_API_KEY=...      # optional
-FRONTEND_URL=http://localhost:5173
-PORT=3001
-```
-
-### Frontend (`frontend/.env`)
-```
-VITE_REOWN_PROJECT_ID=...
-```
