@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@web3icons/react": "^4.1.17",
     "@reown/appkit": "1.6.8",
     "@reown/appkit-adapter-wagmi": "1.6.8",
     "@tanstack/react-query": "^5.62.0",
