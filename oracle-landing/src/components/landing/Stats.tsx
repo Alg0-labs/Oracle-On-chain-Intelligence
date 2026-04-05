@@ -60,7 +60,7 @@ export function StatsBand() {
                 fontFamily:              'var(--font-display)',
                 fontSize:                'clamp(36px, 4vw, 52px)',
                 fontWeight:              800,
-                background:              'linear-gradient(135deg, var(--accent), var(--accent3))',
+                background:              'linear-gradient(135deg, #c6bfff 0%, #7bd0ff 100%)',
                 WebkitBackgroundClip:    'text',
                 WebkitTextFillColor:     'transparent',
                 backgroundClip:          'text',

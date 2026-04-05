@@ -52,9 +52,7 @@ export function HowItWorks() {
       id="how-it-works"
       className="landing-section"
       style={{
-        background:   'var(--bg2)',
-        borderTop:    '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
+        background: 'var(--bg2)',
         position:     'relative',
         zIndex:       1,
       }}
@@ -91,7 +89,7 @@ function StepItem({
         display:       'flex',
         gap:           24,
         padding:       '28px 0',
-        borderBottom:  isLast ? 'none' : '1px solid var(--border)',
+        borderBottom:  isLast ? 'none' : '1px solid rgba(192,193,255,0.08)',
       }}
     >
       <div
@@ -136,10 +134,10 @@ function ChatDemo({ messages }: { messages: Message[] }) {
     <div
       style={{
         background:  'var(--bg)',
-        border:      '1px solid var(--border)',
+        border:      '1px solid rgba(192,193,255,0.1)',
         borderRadius: 16,
         overflow:    'hidden',
-        boxShadow:   '0 40px 80px rgba(0,0,0,0.45), 0 0 0 1px rgba(124,109,250,0.07)',
+        boxShadow:   '0 40px 80px rgba(0,0,0,0.5), 0 0 0 1px rgba(192,193,255,0.06)',
       }}
     >
       {/* Topbar */}
@@ -149,8 +147,8 @@ function ChatDemo({ messages }: { messages: Message[] }) {
           justifyContent:  'space-between',
           alignItems:      'center',
           padding:         '13px 18px',
-          background:      'rgba(124,109,250,0.05)',
-          borderBottom:    '1px solid var(--border)',
+          background:      'rgba(192,193,255,0.04)',
+          borderBottom:    '1px solid rgba(192,193,255,0.08)',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -280,7 +278,7 @@ function ChatDemo({ messages }: { messages: Message[] }) {
           style={{
             width:           36,
             height:          36,
-            background:      'linear-gradient(135deg, var(--accent), #9B8BFF)',
+            background:      'linear-gradient(135deg, var(--accent2), var(--accent))',
             border:          'none',
             borderRadius:    6,
             color:           'white',

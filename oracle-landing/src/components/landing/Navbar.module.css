@@ -13,13 +13,12 @@
   background:      var(--nav-bg);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border-bottom:   1px solid var(--border);
-  transition:      background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+  transition:      background 0.3s ease, box-shadow 0.3s ease;
 }
 
 .nav.scrolled {
-  background:  var(--nav-bg-scrolled);
-  box-shadow:  0 4px 40px rgba(0,0,0,0.4), 0 1px 0 rgba(124,109,250,0.1);
+  background: var(--nav-bg-scrolled);
+  box-shadow: 0 1px 0 rgba(99,102,241,0.12), 0 8px 40px rgba(0,0,0,0.5);
 }
 
 @media (min-width: 769px) {
@@ -36,18 +35,19 @@
 }
 
 .logoGlyph {
-  font-size:   24px;
-  font-weight: 900;
-  color:       var(--accent);
-  font-family: Georgia, serif;
-  line-height: 1;
+  font-size:      18px;
+  font-weight:    700;
+  color:          #6366F1;
+  font-family:    'Inter', system-ui, sans-serif;
+  line-height:    1;
+  letter-spacing: -0.02em;
 }
 
 .logoText {
-  font-family:    var(--font-display);
+  font-family:    'Inter', system-ui, sans-serif;
   font-size:      18px;
-  font-weight:    800;
-  letter-spacing: 6px;
+  font-weight:    700;
+  letter-spacing: -0.02em;
   color:          var(--text);
 }
 
@@ -79,7 +79,7 @@
 .ctaGroup {
   display:     none;
   align-items: center;
-  gap:         10px;
+  gap:         8px;
   flex-shrink: 0;
 }
 
@@ -87,58 +87,58 @@
   .ctaGroup { display: flex; }
 }
 
-/* Theme toggle button */
+/* Theme toggle */
 .themeToggle {
   width:           32px;
   height:          32px;
-  background:      rgba(124,109,250,0.08);
-  border:          1px solid rgba(124,109,250,0.2);
-  border-radius:   6px;
+  background:      transparent;
+  border:          1px solid var(--border);
+  border-radius:   8px;
   display:         flex;
   align-items:     center;
   justify-content: center;
   cursor:          none;
-  font-size:       14px;
-  color:           var(--text);
+  color:           var(--muted);
   flex-shrink:     0;
-  transition:      background 0.2s, border-color 0.2s;
+  transition:      border-color 0.2s, color 0.2s, background 0.2s;
 }
 
 .themeToggle:hover {
-  background:    rgba(124,109,250,0.15);
-  border-color:  rgba(124,109,250,0.4);
-}
-
-.signInBtn {
-  padding:         8px 18px;
-  background:      transparent;
-  border:          1px solid var(--border);
-  color:           var(--muted);
-  font-family:     var(--font-mono);
-  font-size:       12px;
-  letter-spacing:  0.5px;
-  border-radius:   4px;
-  text-decoration: none;
-  display:         inline-block;
-  transition:      border-color 0.2s, color 0.2s;
-}
-
-.signInBtn:hover {
-  border-color: var(--accent);
+  border-color: rgba(99,102,241,0.4);
   color:        var(--text);
+  background:   rgba(99,102,241,0.07);
+}
+
+/* Mobile theme toggle */
+.mobileThemeToggle {
+  margin-top:   12px;
+  padding:      12px 16px;
+  background:   rgba(99,102,241,0.06);
+  border:       1px solid rgba(99,102,241,0.14);
+  border-radius: 8px;
+  color:        var(--text);
+  font-family:  var(--font-mono);
+  font-size:    13px;
+  cursor:       pointer;
+  text-align:   left;
+  transition:   background 0.2s;
+}
+
+.mobileThemeToggle:hover {
+  background: rgba(99,102,241,0.12);
 }
 
 .launchBtn {
   padding:         9px 22px;
-  background:      linear-gradient(135deg, var(--accent), #9B8BFF);
+  background:      #6366F1;
   border:          none;
   color:           #fff;
   font-family:     var(--font-display);
   font-size:       12px;
   font-weight:     700;
-  letter-spacing:  0.5px;
-  border-radius:   4px;
-  box-shadow:      0 0 20px rgba(124,109,250,0.3);
+  letter-spacing:  0.3px;
+  border-radius:   8px;
+  box-shadow:      0 0 20px rgba(99,102,241,0.25);
   text-decoration: none;
   display:         inline-block;
   transition:      transform 0.2s, box-shadow 0.2s;
@@ -146,7 +146,7 @@
 
 .launchBtn:hover {
   transform:  translateY(-1px);
-  box-shadow: 0 0 32px rgba(124,109,250,0.5);
+  box-shadow: 0 0 32px rgba(99,102,241,0.4);
 }
 
 /* ── Hamburger ── */
@@ -168,12 +168,12 @@
 }
 
 .hamburgerLine {
-  width:          100%;
-  height:         2px;
-  background:     var(--text);
-  border-radius:  1px;
-  transition:     transform 0.3s ease, opacity 0.3s ease;
-  display:        block;
+  width:         100%;
+  height:        2px;
+  background:    var(--text);
+  border-radius: 1px;
+  transition:    transform 0.3s ease, opacity 0.3s ease;
+  display:       block;
 }
 
 .hamburger.open .hamburgerLine:nth-child(1) {
@@ -202,7 +202,6 @@
   display:         flex;
   flex-direction:  column;
   gap:             4px;
-  border-top:      1px solid var(--border);
 }
 
 @media (min-width: 769px) {
@@ -215,50 +214,31 @@
   font-weight:     700;
   color:           var(--text);
   text-decoration: none;
-  padding:         14px 0;
-  border-bottom:   1px solid rgba(124,109,250,0.08);
+  padding:         16px 0;
+  border-bottom:   1px solid rgba(192,193,255,0.06);
   letter-spacing:  -0.5px;
   transition:      color 0.2s;
 }
 
 .mobileLink:hover { color: var(--accent); }
 
-.mobileThemeToggle {
-  margin-top:      12px;
-  padding:         12px 16px;
-  background:      rgba(124,109,250,0.06);
-  border:          1px solid rgba(124,109,250,0.15);
-  border-radius:   6px;
-  color:           var(--text);
-  font-family:     var(--font-mono);
-  font-size:       13px;
-  cursor:          pointer;
-  text-align:      left;
-  transition:      background 0.2s;
-}
-
-.mobileThemeToggle:hover {
-  background: rgba(124,109,250,0.12);
-}
-
 .mobileDivider {
   height:     1px;
-  background: var(--border);
-  margin:     12px 0;
+  background: rgba(192,193,255,0.08);
+  margin:     16px 0;
 }
 
 .mobileCta {
   margin-top:      4px;
   padding:         15px 24px;
-  background:      linear-gradient(135deg, var(--accent), #9B8BFF);
+  background:      #6366F1;
   color:           #fff;
   font-family:     var(--font-display);
   font-size:       16px;
   font-weight:     700;
-  letter-spacing:  0.5px;
-  border-radius:   6px;
+  border-radius:   8px;
   text-decoration: none;
   text-align:      center;
   display:         block;
-  box-shadow:      0 0 28px rgba(124,109,250,0.35);
+  box-shadow:      0 0 28px rgba(192,193,255,0.25);
 }

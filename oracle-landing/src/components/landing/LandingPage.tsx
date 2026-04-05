@@ -1,14 +1,12 @@
-import { Cursor }                  from './Cursor'
-import { GridBackground }           from './GridBackground'
-import { Navbar }                   from './Navbar'
-import { Hero }                     from './Hero'
-import { Marquee }                  from './Marquee'
-import { Features }                 from './Features'
-import { HowItWorks }               from './HowItWorks'
-import { SendEth }                  from './SendEth'
-import { StatsBand, RiskSection }   from './Stats'
-import { CTA }                      from './CTA'
-import { Footer }                   from './Footer'
+import { Cursor }         from './Cursor'
+import { GridBackground } from './GridBackground'
+import { Navbar }         from './Navbar'
+import { Hero }           from './Hero'
+import { Features }       from './Features'
+import { Networks }       from './Networks'
+import { HowItWorks }     from './HowItWorks'
+import { CTA }            from './CTA'
+import { Footer }         from './Footer'
 
 export function LandingPage() {
   return (
@@ -18,12 +16,10 @@ export function LandingPage() {
       <Navbar />
       <main>
         <Hero />
-        <Marquee />
+        {/* <Marquee /> */}
         <Features />
+        <Networks />
         <HowItWorks />
-        <SendEth />
-        <StatsBand />
-        <RiskSection />
         <CTA />
       </main>
       <Footer />
