@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import {
   NetworkEthereum,
   NetworkArbitrumOne,
@@ -223,9 +224,15 @@ interface Props {
 
 export function LandingPage({ onConnect }: Props) {
   const { theme, toggle } = useTheme()
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  useEffect(() => {
+    const fn = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
 
   return (
-    <div style={root}>
+    <div style={{ ...root, overflow: isMobile ? 'auto' : 'hidden' }}>
 
       {/* Background glow */}
       <div style={bgGlow} />
@@ -250,10 +257,16 @@ export function LandingPage({ onConnect }: Props) {
       </nav>
 
       {/* ── Main split layout ── */}
-      <div style={main}>
+      <div style={{
+        ...main,
+        flexDirection: isMobile ? 'column' : 'row',
+        padding: isMobile ? '24px 20px' : '0 40px 0 60px',
+        alignItems: isMobile ? 'flex-start' : 'center',
+        overflowY: isMobile ? 'auto' : 'hidden',
+      }}>
 
         {/* ── LEFT: Hero content ── */}
-        <div style={leftCol}>
+        <div style={{ ...leftCol, ...(isMobile ? { width: '100%' } : {}) }}>
 
           {/* Live badge */}
           <div style={badge}>
@@ -264,19 +277,19 @@ export function LandingPage({ onConnect }: Props) {
           </div>
 
           {/* Headline */}
-          <h1 style={headline}>
+          <h1 style={{ ...headline, fontSize: isMobile ? 'clamp(36px, 10vw, 52px)' : 'clamp(38px, 4vw, 58px)' }}>
             Your wallet.<br />
             <span style={headlineAccent}>Understood.</span>
           </h1>
 
           {/* Subtitle */}
-          <p style={subtitle}>
+          <p style={{ ...subtitle, maxWidth: isMobile ? '100%' : 440 }}>
             Connect once. See everything — balances, risk, transactions,
             market context, and an AI that actually knows your on-chain history.
           </p>
 
           {/* CTA */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+          <div style={{ display: 'flex', flexDirection: isMobile ? 'column' : 'row', alignItems: isMobile ? 'flex-start' : 'center', gap: 12, marginBottom: 20 }}>
             <button style={ctaBtn} onClick={onConnect}>
               Connect Wallet
               <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -299,7 +312,7 @@ export function LandingPage({ onConnect }: Props) {
           </div>
 
           {/* Chain marquee */}
-          <div style={{ width: '100%', maxWidth: 500 }}>
+          <div style={{ width: '100%', maxWidth: isMobile ? '100%' : 500 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
               <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--text-6)', letterSpacing: '0.1em' }}>16+ EVM CHAINS</span>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '2px 8px', background: 'var(--accent-glow)', border: '1px solid var(--accent-bd)', borderRadius: 999, fontSize: 9, color: 'var(--accent)', fontWeight: 700, letterSpacing: '0.08em' }}>
@@ -315,7 +328,7 @@ export function LandingPage({ onConnect }: Props) {
         </div>
 
         {/* ── RIGHT: Dashboard preview ── */}
-        <div style={rightCol}>
+        <div style={{ ...rightCol, display: isMobile ? 'none' : 'flex' }}>
           <DashboardPreview />
         </div>
 

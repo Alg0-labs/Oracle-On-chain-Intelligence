@@ -242,3 +242,15 @@ button { cursor: none; }
   .section-tag             { font-size: 10px; letter-spacing: 2px; margin-bottom: 12px; }
   .landing-footer          { padding: 40px 16px 24px !important; }
 }
+
+/* ── Footer mobile ── */
+@media (max-width: 600px) {
+  .landing-footer {
+    padding: 40px 20px 28px !important;
+  }
+  .footer-bottom {
+    flex-direction: column !important;
+    gap: 12px !important;
+    text-align: center !important;
+  }
+}

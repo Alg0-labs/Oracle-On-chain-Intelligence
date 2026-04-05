@@ -1,3 +1,4 @@
+import React from 'react'
 import type { WalletData } from '../types/index.js'
 
 export type Page = 'overview' | 'portfolio' | 'chat' | 'transactions' | 'market'
@@ -69,15 +70,26 @@ interface Props {
   address: string | undefined
   theme: string
   onToggleTheme: () => void
+  isMobile?: boolean
+  isOpen?: boolean
 }
 
-export function Sidebar({ page, setPage, wallet, address, theme, onToggleTheme }: Props) {
+export function Sidebar({ page, setPage, wallet, address, theme, onToggleTheme, isMobile, isOpen }: Props) {
   const risk    = wallet?.riskLevel ?? 'LOW'
   const riskClr = risk === 'LOW' ? '#22C55E' : risk === 'HIGH' ? '#EF4444' : '#F59E0B'
   const display = wallet?.ensName ?? (address ? `${address.slice(0, 6)}…${address.slice(-4)}` : '')
 
+  const sidebarStyle: React.CSSProperties = {
+    ...sidebar,
+    ...(isMobile ? {
+      zIndex: 10,
+      transform: isOpen ? 'translateX(0)' : 'translateX(-100%)',
+      transition: 'transform 0.25s ease, background 0.2s ease, border-color 0.2s ease',
+    } : {}),
+  }
+
   return (
-    <aside style={sidebar}>
+    <aside style={sidebarStyle}>
 
       {/* ── Logo zone ── */}
       <div style={logoZone}>

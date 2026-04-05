@@ -27,6 +27,18 @@ export default function App() {
   const [snapshotUpdatedAt, setSnapshotUpdatedAt] = useState<string | null>(null)
   const [refreshing, setRefreshing]               = useState(false)
   const [refreshError, setRefreshError]           = useState<string | null>(null)
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
+
+  useEffect(() => {
+    const fn = () => {
+      const mobile = window.innerWidth < 768
+      setIsMobile(mobile)
+      if (!mobile) setSidebarOpen(false)
+    }
+    window.addEventListener('resize', fn)
+    return () => window.removeEventListener('resize', fn)
+  }, [])
 
   useEffect(() => {
     if (!address || !isConnected) {
@@ -104,18 +116,39 @@ export default function App() {
   // ── Main app ─────────────────────────────────────────────────────────────────
   return (
     <div style={appRoot}>
+      {/* Mobile overlay backdrop */}
+      {isMobile && sidebarOpen && (
+        <div
+          onClick={() => setSidebarOpen(false)}
+          style={{ position: 'fixed', inset: 0, zIndex: 9, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+        />
+      )}
+
       {/* Fixed sidebar */}
       <Sidebar
         page={page}
-        setPage={setPage}
+        setPage={(p) => { setPage(p); if (isMobile) setSidebarOpen(false) }}
         wallet={wallet}
         address={address}
         theme={theme}
         onToggleTheme={toggle}
+        isMobile={isMobile}
+        isOpen={sidebarOpen}
       />
 
       {/* Fixed top-right action bar: refresh + wallet modal */}
       <div style={walletTopRight}>
+        {isMobile && (
+          <button
+            onClick={() => setSidebarOpen(v => !v)}
+            style={{ display: 'flex', flexDirection: 'column', gap: 4, width: 32, height: 32, padding: '6px 5px', background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 8, cursor: 'pointer', justifyContent: 'center' }}
+            aria-label="Toggle sidebar"
+          >
+            <span style={{ width: '100%', height: 2, background: 'var(--text-3)', borderRadius: 1, display: 'block' }} />
+            <span style={{ width: '100%', height: 2, background: 'var(--text-3)', borderRadius: 1, display: 'block' }} />
+            <span style={{ width: '100%', height: 2, background: 'var(--text-3)', borderRadius: 1, display: 'block' }} />
+          </button>
+        )}
         <button
           style={refreshTopBtn}
           onClick={handleRefresh}
@@ -135,7 +168,7 @@ export default function App() {
       </div>
 
       {/* Main area (offset by sidebar) */}
-      <div style={mainArea}>
+      <div style={{ ...mainArea, marginLeft: isMobile ? 0 : 220 }}>
         {page === 'overview' && (
           <OverviewPanel
             wallet={wallet}

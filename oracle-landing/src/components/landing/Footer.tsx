@@ -90,7 +90,7 @@ export function Footer() {
         </div>
 
         {/* Social icons */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
           {[
             { label: 'Twitter / X', href: 'https://x.com/oracleprotocol',       icon: <XIcon /> },
             { label: 'GitHub',      href: 'https://github.com/oracleprotocol', icon: <GitHubIcon /> },
