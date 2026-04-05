@@ -2,6 +2,8 @@
 
 **On-chain intelligence, distilled.**
 
+<img width="1027" height="308" alt="Screenshot 2026-04-06 at 12 44 30 AM" src="https://github.com/user-attachments/assets/a0568210-3833-4c1b-b80e-a6265ae5b148" />
+
 ØRACLE is an AI intelligence layer for your crypto wallet. Connect once, ask anything in plain English, and understand everything — portfolio value, risk exposure, transaction history, and market context — from a single conversational interface.
 
 **[Launch App](https://app.oracleprotocol.online)** · **[Landing Page](https://oracleprotocol.online)** · **[Twitter / X](https://x.com/askoracleprtcl)**
@@ -23,7 +25,9 @@ Non-custodial. Read-only by default. No signup required.
 
 ## How sending works
 
-
+<p align="center">
+  <img width="492" height="692" alt="image" src="https://github.com/user-attachments/assets/78a09db0-ccf9-49db-95fd-2a3aa7e2a814" />
+</p>
 
 1. You type something like `send 0.5 ETH to vitalik.eth` in the chat
 2. The AI parses your intent and returns a structured transaction preview
@@ -34,11 +38,8 @@ Non-custodial. Read-only by default. No signup required.
 
 The backend never holds keys or signs transactions. All signing happens client-side through WalletConnect / Reown.
 
-
-
-
-
 ---
+
 
 ## Architecture
 
