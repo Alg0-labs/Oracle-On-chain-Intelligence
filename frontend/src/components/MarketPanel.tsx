@@ -209,7 +209,7 @@ export function MarketPanel({ market, wallet }: Props) {
                 {market.portfolioImpact.map((imp, i) => (
                   <div key={imp.token} style={{
                     ...impactRow,
-                    borderBottom: i < market.portfolioImpact.length - 1 ? '1px solid #1E1E2A' : 'none',
+                    borderBottom: i < market.portfolioImpact.length - 1 ? '1px solid var(--border)' : 'none',
                   }}>
                     <div style={{ flex: 1 }}>
                       <span style={impactToken}>{imp.token}</span>
@@ -281,7 +281,7 @@ const bigVal: React.CSSProperties = {
   color: 'var(--text)',
 }
 
-const twoCol: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 340px', gap: 12 }
+const twoCol: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 420px', gap: 12 }
 
 const newsRow: React.CSSProperties = { padding: '14px 0' }
 
@@ -304,16 +304,20 @@ const newsSummary: React.CSSProperties = { fontSize: 12, color: 'var(--text-4)',
 
 const insightRow: React.CSSProperties  = { padding: '14px 0' }
 const insightHeader: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }
-const insightTitle: React.CSSProperties  = { fontSize: 13, fontWeight: 500, color: 'var(--text-2)', lineHeight: 1.4, margin: '0 0 10px' }
+const insightTitle: React.CSSProperties  = { fontSize: 13, fontWeight: 500, color: 'var(--text-2)', lineHeight: 1.5, margin: '0 0 10px' }
 
 const aiBox: React.CSSProperties = {
   background: 'var(--accent-glow)', border: '1px solid var(--accent-bd)',
   borderRadius: 6, padding: '10px 12px', marginBottom: 8,
+  overflow: 'visible',
 }
 const aiLabel: React.CSSProperties = {
   fontSize: 9, fontWeight: 700, color: 'var(--accent)', letterSpacing: '0.1em', display: 'block', marginBottom: 4,
 }
-const aiText: React.CSSProperties = { fontSize: 12, color: 'var(--text-3)', lineHeight: 1.6, margin: 0 }
+const aiText: React.CSSProperties = {
+  fontSize: 12, color: 'var(--text-3)', lineHeight: 1.7, margin: 0,
+  whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+}
 const fearGreedNote: React.CSSProperties = { fontSize: 11, color: 'var(--text-5)', margin: 0, fontStyle: 'italic' }
 
 const impactRow: React.CSSProperties  = { display: 'flex', alignItems: 'center', padding: '10px 0' }

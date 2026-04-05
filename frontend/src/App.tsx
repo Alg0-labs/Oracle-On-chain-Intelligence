@@ -5,6 +5,7 @@ import { ChatPanel } from './components/ChatPanel.js'
 import { PortfolioPanel } from './components/PortfolioPanel.js'
 import { OverviewPanel } from './components/OverviewPanel.js'
 import { MarketPanel } from './components/MarketPanel.js'
+import { TransactionsPanel } from './components/TransactionsPanel.js'
 import { Sidebar } from './components/Sidebar.js'
 import type { Page } from './components/Sidebar.js'
 import { LandingPage } from './components/LandingPage.js'
@@ -161,11 +162,7 @@ export default function App() {
           />
         )}
         {page === 'transactions' && (
-          <PortfolioPanel
-            wallet={wallet}
-            market={market}
-            isMobile={false}
-          />
+          <TransactionsPanel wallet={wallet} />
         )}
         {page === 'market' && (
           <MarketPanel
@@ -190,7 +187,7 @@ const stateRoot: React.CSSProperties = {
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'var(--font-body)',
 }
 
 const loadingCenter: React.CSSProperties = {
@@ -206,18 +203,18 @@ const spinner: React.CSSProperties = {
   width: 32,
   height: 32,
   borderRadius: '50%',
-  border: '2px solid #1E1E2A',
-  borderTopColor: '#6366F1',
+  border: '2px solid var(--border)',
+  borderTopColor: 'var(--accent)',
   animation: 'spin 0.8s linear infinite',
 }
 
 const loadTitle: React.CSSProperties = {
   fontSize: 14,
-  color: '#A1A1AA',
-  fontFamily: 'SF Mono, Fira Code, monospace',
+  color: 'var(--text-3)',
+  fontFamily: 'var(--font-mono)',
 }
 
-const loadSub: React.CSSProperties = { fontSize: 12, color: '#52525B' }
+const loadSub: React.CSSProperties = { fontSize: 12, color: 'var(--text-5)' }
 
 const errorCard: React.CSSProperties = {
   background: 'rgba(239,68,68,0.06)',
@@ -268,7 +265,7 @@ const refreshTopBtn: React.CSSProperties = {
   color: 'var(--text-4)',
   fontSize: 13,
   fontWeight: 500,
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'var(--font-body)',
   cursor: 'pointer',
   transition: 'border-color 0.15s, color 0.15s',
   whiteSpace: 'nowrap' as const,

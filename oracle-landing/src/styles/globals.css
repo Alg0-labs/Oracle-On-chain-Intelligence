@@ -35,7 +35,7 @@
   --font-display: 'Inter', system-ui, sans-serif;
   --font-body:    'Inter', system-ui, sans-serif;
   --font-label:   'Inter', system-ui, sans-serif;
-  --font-mono:    'Inter', system-ui, sans-serif;
+  --font-mono:    'SF Mono', 'Fira Code', 'Fira Mono', monospace;
 
   /* Navbar */
   --nav-bg:          rgba(9,9,11,0.70);

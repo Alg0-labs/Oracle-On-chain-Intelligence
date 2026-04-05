@@ -260,7 +260,7 @@ const walletName: React.CSSProperties = {
 const walletAddr: React.CSSProperties = {
   fontSize: 10,
   color: 'var(--text-5)',
-  fontFamily: 'SF Mono, Fira Code, monospace',
+  fontFamily: 'var(--font-mono)',
   marginTop: 1,
 }
 
@@ -306,7 +306,7 @@ const navItem: React.CSSProperties = {
   cursor: 'pointer',
   transition: 'background 0.15s, color 0.15s',
   position: 'relative',
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'var(--font-body)',
 }
 
 const navActive: React.CSSProperties = {

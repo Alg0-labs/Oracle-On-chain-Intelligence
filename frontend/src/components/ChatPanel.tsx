@@ -320,10 +320,10 @@ const promptsRow: React.CSSProperties = {
 const chip: React.CSSProperties = {
   padding: '5px 12px',
   background: 'transparent',
-  border: '1px solid #27272F',
+  border: '1px solid var(--border-sub)',
   borderRadius: 6,
-  color: '#71717A', fontSize: 11,
-  fontFamily: 'Inter, system-ui, sans-serif', fontWeight: 400,
+  color: 'var(--text-4)', fontSize: 11,
+  fontFamily: 'var(--font-body)', fontWeight: 400,
   cursor: 'pointer', transition: 'all 0.15s',
   whiteSpace: 'nowrap' as const,
 }
@@ -342,7 +342,7 @@ const inputStyle: React.CSSProperties = {
   border: '1px solid var(--border-sub)',
   borderRadius: 8, padding: '10px 16px',
   color: 'var(--text)', fontSize: 14,
-  fontFamily: 'Inter, system-ui, sans-serif',
+  fontFamily: 'var(--font-body)',
   transition: 'border-color 0.15s, background 0.2s ease',
 }
 
