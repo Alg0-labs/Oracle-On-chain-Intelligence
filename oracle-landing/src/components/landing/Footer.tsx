@@ -92,10 +92,10 @@ export function Footer() {
         {/* Social icons */}
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
           {[
-            { label: 'Twitter / X', href: 'https://x.com/oracleprotocol',       icon: <XIcon /> },
-            { label: 'GitHub',      href: 'https://github.com/oracleprotocol', icon: <GitHubIcon /> },
-            { label: 'Discord',     href: 'https://discord.gg/oracleprotocol', icon: <DiscordIcon /> },
-            { label: 'Telegram',    href: 'https://t.me/oracleprotocol',       icon: <TelegramIcon /> },
+            { label: 'Twitter / X', href: 'https://x.com/askoracleprtcl',       icon: <XIcon /> },
+            { label: 'GitHub',      href: 'https://github.com/Alg0-labs/oracle-on-chain-Intelligence', icon: <GitHubIcon /> },
+            // { label: 'Discord',     href: 'https://discord.gg/oracleprotocol', icon: <DiscordIcon /> },
+            // { label: 'Telegram',    href: 'https://t.me/oracleprotocol',       icon: <TelegramIcon /> },
           ].map(s => (
             <a
               key={s.label}
