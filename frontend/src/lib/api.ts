@@ -52,12 +52,13 @@ export async function fetchTransactions(
 
 export async function sendChat(
   address: string,
-  messages: Omit<ChatMessage, 'id' | 'timestamp'>[]
+  messages: Omit<ChatMessage, 'id' | 'timestamp'>[],
+  threadId?: string | null
 ): Promise<{ reply: string; txIntent?: SendTxIntent; remainingCredits?: number; threadId?: string }> {
   const res = await fetch(`${BASE}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ address, messages }),
+    body: JSON.stringify({ address, messages, threadId: threadId ?? undefined }),
   })
   const json = await res.json()
   if (!json.success) {
@@ -106,5 +107,60 @@ export async function fetchChatHistory(address: string): Promise<{
     threadId: json.threadId ?? null,
     messages: Array.isArray(json.messages) ? json.messages : [],
     remainingCredits: typeof json.remainingCredits === 'number' ? json.remainingCredits : undefined,
+  }
+}
+
+export async function fetchChatHistoryByThread(address: string, threadId: string): Promise<{
+  threadId: string | null
+  messages: Array<{ role: 'user' | 'assistant'; content: string; createdAt: string }>
+  remainingCredits?: number
+}> {
+  const params = new URLSearchParams({ threadId })
+  const res = await fetch(`${BASE}/chat/${address}/history?${params}`)
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error ?? 'Failed to fetch chat history')
+  return {
+    threadId: json.threadId ?? null,
+    messages: Array.isArray(json.messages) ? json.messages : [],
+    remainingCredits: typeof json.remainingCredits === 'number' ? json.remainingCredits : undefined,
+  }
+}
+
+export async function fetchChatThreads(address: string): Promise<Array<{ id: string; title: string | null; updatedAt: string }>> {
+  const res = await fetch(`${BASE}/chat/${address}/threads`)
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error ?? 'Failed to fetch chat threads')
+  return Array.isArray(json.threads) ? json.threads : []
+}
+
+export async function createChatThread(address: string, title?: string): Promise<{ id: string; title: string | null; updatedAt: string }> {
+  const res = await fetch(`${BASE}/chat/${address}/threads`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: title ?? null }),
+  })
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error ?? 'Failed to create chat thread')
+  return json.thread
+}
+
+export async function renameChatThread(address: string, threadId: string, title: string): Promise<void> {
+  const res = await fetch(`${BASE}/chat/${address}/threads/${threadId}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title }),
+  })
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error ?? 'Failed to rename chat thread')
+}
+
+export async function fetchCredits(address: string): Promise<{ creditsTotal: number; creditsUsed: number; remainingCredits: number }> {
+  const res = await fetch(`${BASE}/credits/${address}`)
+  const json = await res.json()
+  if (!json.success) throw new Error(json.error ?? 'Failed to fetch credits')
+  return {
+    creditsTotal: Number(json.creditsTotal ?? 0),
+    creditsUsed: Number(json.creditsUsed ?? 0),
+    remainingCredits: Number(json.remainingCredits ?? 0),
   }
 }

@@ -41,6 +41,19 @@ export async function getRemainingCredits(address: string): Promise<number> {
   return Math.max(0, account.creditsTotal - account.creditsUsed)
 }
 
+export async function getCreditSummary(address: string): Promise<{
+  creditsTotal: number
+  creditsUsed: number
+  remainingCredits: number
+}> {
+  const account = await getOrCreateCreditAccount(address)
+  return {
+    creditsTotal: account.creditsTotal,
+    creditsUsed: account.creditsUsed,
+    remainingCredits: Math.max(0, account.creditsTotal - account.creditsUsed),
+  }
+}
+
 export async function consumeCreditsAtomic(input: {
   address: string
   cost: number

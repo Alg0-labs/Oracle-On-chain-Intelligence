@@ -14,10 +14,12 @@ import {
 import { appendMessages, getOrCreateLatestThread, listLatestThreadMessages } from '../services/chat-history.service.js'
 import {
   consumeCreditsAtomic,
+  getCreditSummary,
   getChatCreditCost,
   getRemainingCredits,
   InsufficientCreditsError,
 } from '../services/credit.service.js'
+import { createThread, listThreadMessagesById, listThreads, renameThread } from '../services/chat-history.service.js'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -121,6 +123,7 @@ router.get('/wallet/:address/transactions', async (req, res) => {
 
 const ChatBodySchema = z.object({
   address: AddressSchema,
+  threadId: z.string().min(1).optional(),
   messages: z.array(
     z.object({
       role: z.enum(['user', 'assistant']),
@@ -135,7 +138,7 @@ router.post('/chat', async (req, res) => {
     return res.status(400).json({ error: 'Invalid request', details: parsed.error.errors })
   }
 
-  const { address, messages } = parsed.data
+  const { address, messages, threadId } = parsed.data
 
   try {
     const isAnonymousPreset = POPULAR_WALLET_SET.has(address.toLowerCase())
@@ -157,7 +160,11 @@ router.post('/chat', async (req, res) => {
     }
 
     const response = await chat(messages, wallet, snapshotUpdatedAt)
-    const thread = await getOrCreateLatestThread(address)
+    const thread = threadId
+      ? await prisma.chatThread.findFirst({
+          where: { id: threadId, address: address.toLowerCase() },
+        }) ?? await getOrCreateLatestThread(address)
+      : await getOrCreateLatestThread(address)
     const userMessage = messages[messages.length - 1]
     await appendMessages(thread.id, [
       { role: 'user', content: userMessage.content },
@@ -195,6 +202,7 @@ router.post('/chat', async (req, res) => {
 
 router.get('/chat/:address/history', async (req, res) => {
   const { address } = req.params
+  const threadId = typeof req.query.threadId === 'string' ? req.query.threadId : undefined
   if (!AddressSchema.safeParse(address).success) {
     return res.status(400).json({ error: 'Invalid Ethereum address' })
   }
@@ -203,7 +211,9 @@ router.get('/chat/:address/history', async (req, res) => {
   }
 
   try {
-    const history = await listLatestThreadMessages(address, 200)
+    const history = threadId
+      ? await listThreadMessagesById(address, threadId, 200)
+      : await listLatestThreadMessages(address, 200)
     const remainingCredits = await getRemainingCredits(address)
     res.json({ success: true, ...history, remainingCredits })
   } catch (err: any) {
@@ -212,6 +222,83 @@ router.get('/chat/:address/history', async (req, res) => {
     }
     console.error('[chat-history]', err.message)
     res.status(500).json({ error: err.message ?? 'Failed to fetch chat history' })
+  }
+})
+
+router.get('/chat/:address/threads', async (req, res) => {
+  const { address } = req.params
+  if (!AddressSchema.safeParse(address).success) {
+    return res.status(400).json({ error: 'Invalid Ethereum address' })
+  }
+  if (POPULAR_WALLET_SET.has(address.toLowerCase())) {
+    return res.json({ success: true, threads: [] })
+  }
+
+  try {
+    const threads = await listThreads(address, 100)
+    res.json({ success: true, threads })
+  } catch (err: any) {
+    console.error('[chat-threads]', err.message)
+    res.status(500).json({ error: err.message ?? 'Failed to fetch chat threads' })
+  }
+})
+
+router.post('/chat/:address/threads', async (req, res) => {
+  const { address } = req.params
+  if (!AddressSchema.safeParse(address).success) {
+    return res.status(400).json({ error: 'Invalid Ethereum address' })
+  }
+  if (POPULAR_WALLET_SET.has(address.toLowerCase())) {
+    return res.status(403).json({ error: 'Anonymous preset wallets cannot create saved threads' })
+  }
+
+  try {
+    const title = typeof req.body?.title === 'string' ? req.body.title : null
+    const thread = await createThread(address, title)
+    res.json({ success: true, thread })
+  } catch (err: any) {
+    console.error('[chat-thread-create]', err.message)
+    res.status(500).json({ error: err.message ?? 'Failed to create chat thread' })
+  }
+})
+
+router.patch('/chat/:address/threads/:threadId', async (req, res) => {
+  const { address, threadId } = req.params
+  if (!AddressSchema.safeParse(address).success) {
+    return res.status(400).json({ error: 'Invalid Ethereum address' })
+  }
+  const title = typeof req.body?.title === 'string' ? req.body.title.trim() : ''
+  if (!title) {
+    return res.status(400).json({ error: 'Thread title is required' })
+  }
+
+  try {
+    const result = await renameThread(address, threadId, title)
+    if (result.count === 0) {
+      return res.status(404).json({ error: 'Thread not found' })
+    }
+    res.json({ success: true })
+  } catch (err: any) {
+    console.error('[chat-thread-rename]', err.message)
+    res.status(500).json({ error: err.message ?? 'Failed to rename chat thread' })
+  }
+})
+
+router.get('/credits/:address', async (req, res) => {
+  const { address } = req.params
+  if (!AddressSchema.safeParse(address).success) {
+    return res.status(400).json({ error: 'Invalid Ethereum address' })
+  }
+  if (POPULAR_WALLET_SET.has(address.toLowerCase())) {
+    return res.json({ success: true, creditsTotal: 0, creditsUsed: 0, remainingCredits: 0 })
+  }
+
+  try {
+    const summary = await getCreditSummary(address)
+    res.json({ success: true, ...summary })
+  } catch (err: any) {
+    console.error('[credits]', err.message)
+    res.status(500).json({ error: err.message ?? 'Failed to load credits' })
   }
 })
 
