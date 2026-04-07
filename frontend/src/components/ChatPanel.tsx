@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { sendChat } from '../lib/api.js'
+import { fetchChatHistory, sendChat } from '../lib/api.js'
 import { SendConfirmModal } from './SendConfirmModal.js'
 import { useIsMobile } from '../lib/mobile.js'
 import type { ChatMessage, WalletData, SendTxIntent } from '../types/index.js'
@@ -69,9 +69,18 @@ interface Props {
   address: string
   snapshotUpdatedAt?: string | null
   onWalletRefresh?: () => void
+  canChat?: boolean
+  anonymousMode?: boolean
 }
 
-export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh }: Props) {
+export function ChatPanel({
+  wallet,
+  address,
+  snapshotUpdatedAt,
+  onWalletRefresh,
+  canChat = true,
+  anonymousMode = false,
+}: Props) {
   const isMobile = useIsMobile()
   const [messages, setMessages] = useState<ChatMessage[]>([
     { id: '0', role: 'assistant', content: buildWelcome(wallet), timestamp: new Date() },
@@ -79,6 +88,7 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
   const [pendingTx, setPendingTx] = useState<SendTxIntent | null>(null)
+  const [remainingCredits, setRemainingCredits] = useState<number | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -87,6 +97,7 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
 
   useEffect(() => {
     setMessages([{ id: '0', role: 'assistant', content: buildWelcome(wallet), timestamp: new Date() }])
+    setRemainingCredits(null)
   }, [address])
 
   useEffect(() => {
@@ -97,9 +108,47 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
     })
   }, [snapshotUpdatedAt, wallet])
 
+  useEffect(() => {
+    if (!canChat || anonymousMode) return
+    let cancelled = false
+
+    fetchChatHistory(address)
+      .then((history) => {
+        if (cancelled) return
+        setRemainingCredits(
+          typeof history.remainingCredits === 'number' ? history.remainingCredits : null
+        )
+        if (history.messages.length === 0) return
+        setMessages(
+          history.messages.map((message, index) => ({
+            id: `h-${index}`,
+            role: message.role,
+            content: message.content,
+            timestamp: new Date(message.createdAt),
+          }))
+        )
+      })
+      .catch((err: any) => {
+        if (cancelled) return
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `hist-err-${Date.now()}`,
+            role: 'assistant',
+            content: `Unable to load previous chat history: ${err.message ?? 'Unknown error'}`,
+            timestamp: new Date(),
+          },
+        ])
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [address, canChat, anonymousMode])
+
   const send = async (text?: string) => {
     const q = (text ?? input).trim()
-    if (!q || loading) return
+    if (!q || loading || !canChat) return
     setInput('')
 
     const userMsg: ChatMessage = {
@@ -111,17 +160,23 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
 
     try {
       const apiMessages = updated.map(m => ({ role: m.role, content: m.content }))
-      const { reply, txIntent } = await sendChat(address, apiMessages)
+      const { reply, txIntent, remainingCredits: updatedCredits } = await sendChat(address, apiMessages)
       setMessages(prev => [
         ...prev,
         { id: Date.now().toString() + 'r', role: 'assistant', content: reply, timestamp: new Date() },
       ])
+      if (typeof updatedCredits === 'number') {
+        setRemainingCredits(updatedCredits)
+      }
       if (txIntent) setPendingTx(txIntent)
     } catch (err: any) {
       setMessages(prev => [
         ...prev,
         { id: 'err', role: 'assistant', content: `Error: ${err.message ?? 'Backend unreachable'}`, timestamp: new Date() },
       ])
+      if (typeof err?.remainingCredits === 'number') {
+        setRemainingCredits(err.remainingCredits)
+      }
     }
     setLoading(false)
   }
@@ -131,7 +186,13 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
       {/* Page header */}
       <header style={{ height: 52, borderBottom: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 24px', flexShrink: 0, background: 'var(--bg)', transition: 'background 0.2s ease' }}>
         <h1 style={{ fontSize: 18, fontWeight: 600, color: 'var(--text)', letterSpacing: '-0.02em', margin: 0 }}>AI Assistant</h1>
-        <span style={{ fontSize: 11, color: 'var(--text-5)' }}>Wallet-aware · Context-rich</span>
+        <span style={{ fontSize: 11, color: 'var(--text-5)' }}>
+          {anonymousMode
+            ? 'Anonymous mode · Session-only chat'
+            : remainingCredits == null
+              ? 'Wallet-aware · Context-rich'
+              : `Credits left: ${remainingCredits}`}
+        </span>
       </header>
 
       {/* Messages */}
@@ -196,11 +257,16 @@ export function ChatPanel({ wallet, address, snapshotUpdatedAt, onWalletRefresh 
         <button
           style={{ ...sendBtn, opacity: loading || !input.trim() ? 0.35 : 1 }}
           onClick={() => send()}
-          disabled={loading || !input.trim()}
+          disabled={loading || !input.trim() || !canChat}
         >
           ↑
         </button>
       </div>
+      {!canChat && (
+        <div style={chatDisabledNotice}>
+          Connect your wallet to use the AI assistant. In anonymous mode you can explore portfolio, market, and transactions only.
+        </div>
+      )}
 
       {/* Send confirmation modal */}
       {pendingTx && (
@@ -354,4 +420,11 @@ const sendBtn: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'center',
   flexShrink: 0,
   transition: 'opacity 0.15s',
+}
+
+const chatDisabledNotice: React.CSSProperties = {
+  borderTop: '1px solid var(--border)',
+  color: 'var(--text-5)',
+  padding: '8px 20px 12px',
+  fontSize: 12,
 }
